@@ -1,0 +1,21 @@
+{
+  "number": "22",
+  "title": "Upon Entry",
+  "year": "2022",
+  "director": "Alejandro Rojas & Juan Sebastián Vásquez",
+  "type": "dvd",
+  "category": "picks",
+  "shelfBook": "book-03-06-pink",
+  "color": "#2c2c2f",
+  "spine": {
+    "title": "UPON ENTRY"
+  },
+  "cover": {
+    "blend": "normal",
+    "opacity": 1
+  },
+  "rating": 5,
+  "heart": true,
+  "review": "No bullets, no sex. Just good actors, good dialogue, a great plot and a greater ending, all in basically just one set. As a Venezuelan, this movie is quite frustrating, but really good, and under-appreciated. More Latin Americans should watch this.",
+  "letterboxd": "https://letterboxd.com/film/upon-entry/"
+}

@@ -1,0 +1,12 @@
+{
+    "number":  "16",
+    "title":  "MINDS",
+    "year":  "2020",
+    "type":  "magazine",
+    "category":  "side quests",
+    "shelfBook":  "book-02-04-pink",
+    "color":  "pink",
+    "spine":  {
+                  "title":  ""
+              }
+}

@@ -1,0 +1,16 @@
+{
+    "number":  "01",
+    "title":  "PLAY MEDIA",
+    "year":  "2026",
+    "shelfBook":  "book-01-01-blue",
+    "color":  "blue",
+    "spine":  {
+                  "title":  "PLAY MEDIA",
+                  "color":  "#fff"
+              },
+    "cover":  {
+                  "blend":  "screen",
+                  "opacity":  1
+              },
+    "category":  "identities"
+}

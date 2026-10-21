@@ -1,0 +1,21 @@
+{
+  "number": "31",
+  "title": "101 Things I Learned in Architecture School",
+  "year": "2007",
+  "author": "Matthew Frederick",
+  "type": "book",
+  "category": "picks",
+  "shelfBook": "book-08-03-burgundy",
+  "color": "burgundy",
+  "spine": {
+    "title": "101 THINGS"
+  },
+  "cover": {
+    "blend": "normal",
+    "opacity": 1
+  },
+  "aspect": 1.3889,
+  "thickness": 0.1764,
+  "synopsis": "Small lessons from the architecture studio, one per spread, each with a sketch: how to draw a line, why a space needs a sequence, how to take criticism. Written for architecture students, loved by every kind of designer.",
+  "amazon": "https://amzn.to/47vCSBK"
+}

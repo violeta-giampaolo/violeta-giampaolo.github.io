@@ -1,0 +1,5 @@
+node_modules
+dist
+# Her original PDFs stay on this computer; the site only uses the pages made from them (pdf-pages/)
+*.pdf
+.mcp.json

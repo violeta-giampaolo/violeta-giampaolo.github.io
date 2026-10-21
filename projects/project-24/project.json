@@ -1,0 +1,21 @@
+{
+  "number": "24",
+  "title": "The Laws of Human Nature",
+  "year": "2018",
+  "author": "Robert Greene",
+  "type": "book",
+  "category": "picks",
+  "shelfBook": "book-06-04-burgundy",
+  "color": "burgundy",
+  "spine": {
+    "title": "LAWS OF HUMAN NATURE"
+  },
+  "cover": {
+    "blend": "normal",
+    "opacity": 1
+  },
+  "aspect": 0.653,
+  "thickness": 0.143,
+  "synopsis": "A field guide to why people act the way they do: envy, narcissism, the masks we wear, the need to belong. Greene mixes psychology with stories of historical figures so you start reading the room, and yourself, a lot better.",
+  "amazon": "https://amzn.to/4yucm6V"
+}

@@ -1,0 +1,21 @@
+{
+  "number": "38",
+  "title": "Ikigai",
+  "year": "2016",
+  "author": "Héctor García & Francesc Miralles",
+  "type": "book",
+  "category": "picks",
+  "shelfBook": "book-09-02-blue",
+  "color": "blue",
+  "spine": {
+    "title": "IKIGAI"
+  },
+  "cover": {
+    "blend": "normal",
+    "opacity": 1
+  },
+  "aspect": 0.7057,
+  "thickness": 0.1268,
+  "synopsis": "What the people of Okinawa, home to some of the longest lives on Earth, can teach us about finding a reason to get up in the morning: staying busy, eating light, keeping friends close, and doing what you love.",
+  "amazon": "https://amzn.to/4hYAdGS"
+}

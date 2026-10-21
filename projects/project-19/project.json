@@ -1,0 +1,21 @@
+{
+  "number": "19",
+  "title": "High-Rise",
+  "year": "2015",
+  "director": "Ben Wheatley",
+  "type": "dvd",
+  "category": "picks",
+  "shelfBook": "book-10-11-olive",
+  "color": "#2c2c2f",
+  "spine": {
+    "title": "HIGH-RISE"
+  },
+  "cover": {
+    "blend": "normal",
+    "opacity": 1
+  },
+  "rating": 5,
+  "heart": true,
+  "review": "As a future architect, this movie is amazing. If you are familiar with the impossible communal projects architects like Le Corbusier proposed, this movie is gonna give you a better understanding of humans and how architecture influences them. A dystopia turned into a utopia.",
+  "letterboxd": "https://letterboxd.com/film/high-rise-2015/"
+}

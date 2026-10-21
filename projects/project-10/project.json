@@ -1,0 +1,15 @@
+{
+    "number":  "10",
+    "title":  "PEZ",
+    "year":  "2025",
+    "shelfBook":  "book-07-08-orange",
+    "color":  "orange",
+    "spine":  {
+                  "title":  "PEZ"
+              },
+    "cover":  {
+                  "blend":  "screen",
+                  "opacity":  1
+              },
+    "category":  "identities"
+}

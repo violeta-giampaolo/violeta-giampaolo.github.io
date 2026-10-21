@@ -1,0 +1,21 @@
+{
+  "number": "29",
+  "title": "The Psychology of Money",
+  "year": "2020",
+  "author": "Morgan Housel",
+  "type": "book",
+  "category": "picks",
+  "shelfBook": "book-07-10-blue",
+  "color": "blue",
+  "spine": {
+    "title": "PSYCHOLOGY OF MONEY"
+  },
+  "cover": {
+    "blend": "normal",
+    "opacity": 1
+  },
+  "aspect": 0.6369,
+  "thickness": 0.0778,
+  "synopsis": "Nineteen short stories about how people really behave with money. Doing well with it has less to do with how smart you are and more to do with patience, humility and knowing when you have enough.",
+  "amazon": "https://amzn.to/4zPmVTb"
+}

@@ -1,0 +1,21 @@
+{
+  "number": "18",
+  "title": "Past Lives",
+  "year": "2023",
+  "director": "Celine Song",
+  "type": "dvd",
+  "category": "picks",
+  "shelfBook": "book-10-10-yellow",
+  "color": "#2c2c2f",
+  "spine": {
+    "title": "PAST LIVES"
+  },
+  "cover": {
+    "blend": "normal",
+    "opacity": 1
+  },
+  "rating": 5,
+  "heart": true,
+  "review": "This is one of those movies that is supposed to find you at the right time, after a break up. It's not the classic romcom, it's just LIFE, portrayed in the simplest and most romantic way. It broke my heart, in the best way possible.",
+  "letterboxd": "https://letterboxd.com/film/past-lives/"
+}

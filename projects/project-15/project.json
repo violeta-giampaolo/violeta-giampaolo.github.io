@@ -1,0 +1,169 @@
+{
+  "number": "15",
+  "title": "YOLO KIDS",
+  "year": "2025",
+  "category": "campaigns",
+  "subtitle": "for The .Wave.Estudio",
+  "shelfBook": "book-12-01-pink",
+  "color": "pink",
+  "spine": {
+    "title": "YOLO KIDS",
+    "color": "#fff"
+  },
+  "cover": {
+    "blend": "screen",
+    "opacity": 1
+  },
+  "description": {
+    "en": "Playful design with purpose: storytelling, interaction and brand love for the next generation.\n\nYOLO, a Venezuelan yogurt brand, launched a new product line for kids, and I was entrusted with part of the PR package and branded merchandise. YOLO's new kids' line needed more than packaging: it needed a universe. I designed a coloring book that introduces the brand's characters and values through interactive storytelling; a sticker set made for play and collecting; a memory card game that turns brand elements into tactile, repeatable moments of joy; and 'glorificadores', countertop displays that lift the product in store.\n\nVibrant colors meet soft, friendly shapes and warm, whimsical illustration. Every piece was designed to feel like a gift, not a marketing tool.\n\nTimeframe: 5 days · Tools: Illustrator, Photoshop"
+  },
+  "type": "memorybox",
+  "photos": [
+    {
+      "image": "07.jpg",
+      "cutout": true,
+      "size": 0.85,
+      "at": [
+        170,
+        330,
+        -3
+      ]
+    },
+    {
+      "image": "08.jpg",
+      "cutout": true,
+      "size": 0.6,
+      "at": [
+        430,
+        44,
+        6
+      ]
+    },
+    {
+      "image": "09.jpg",
+      "cutout": true,
+      "size": 0.6,
+      "at": [
+        50,
+        270,
+        -6
+      ]
+    },
+    {
+      "image": "01.jpg",
+      "caption": "the PR kit!",
+      "at": [
+        44,
+        44,
+        -5
+      ],
+      "size": 0.8
+    },
+    {
+      "image": "02.jpg",
+      "caption": "kit in action",
+      "at": [
+        176,
+        46,
+        4
+      ],
+      "size": 0.8
+    },
+    {
+      "image": "03.jpg",
+      "caption": "coloring book pages",
+      "at": [
+        312,
+        40,
+        -3
+      ],
+      "size": 0.8
+    },
+    {
+      "image": "10.jpg",
+      "cutout": true,
+      "size": 0.6,
+      "at": [
+        430,
+        200,
+        -5
+      ]
+    },
+    {
+      "image": "11.jpg",
+      "cutout": true,
+      "size": 0.6,
+      "at": [
+        450,
+        320,
+        5
+      ]
+    },
+    {
+      "image": "12.jpg",
+      "cutout": true,
+      "size": 0.6,
+      "at": [
+        60,
+        140,
+        7
+      ]
+    },
+    {
+      "image": "13.jpg",
+      "cutout": true,
+      "size": 0.6,
+      "at": [
+        250,
+        300,
+        -7
+      ]
+    },
+    {
+      "image": "04.jpg",
+      "caption": "memory cards",
+      "at": [
+        150,
+        200,
+        5
+      ],
+      "size": 0.8
+    },
+    {
+      "image": "05.jpg",
+      "caption": "memory cards, IRL",
+      "at": [
+        300,
+        190,
+        -4
+      ],
+      "size": 0.8
+    },
+    {
+      "image": "06.jpg",
+      "caption": "sticker set",
+      "at": [
+        330,
+        330,
+        3
+      ],
+      "size": 0.8
+    }
+  ],
+  "memory": {
+    "back": "back.jpg",
+    "fronts": [
+      "berrychar.jpg",
+      "applechar.jpg",
+      "berry.jpg",
+      "cup.jpg"
+    ],
+    "size": 82,
+    "area": [
+      60,
+      478,
+      440,
+      190
+    ]
+  }
+}

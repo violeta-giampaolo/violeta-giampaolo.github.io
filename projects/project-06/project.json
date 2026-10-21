@@ -1,0 +1,143 @@
+{
+  "number": "06",
+  "title": "YOLO RUDOLF",
+  "year": "2025",
+  "category": "campaigns",
+  "subtitle": "for The .Wave.Estudio",
+  "shelfBook": "book-04-02-burgundy",
+  "color": "burgundy",
+  "spine": {
+    "title": "YOLO RUDOLF",
+    "color": "#fff"
+  },
+  "cover": {
+    "blend": "screen",
+    "opacity": 1
+  },
+  "description": {
+    "en": "A festive launch across print and digital.\n\nYolo Navidad was a limited-edition holiday flavor from Yolo, the Venezuelan Greek yogurt brand known for its playful identity. I developed the full visual campaign for its release, across print, digital and in-store, each piece built to feel like celebration and warmth while staying unmistakably Yolo.\n\nA full-page ad for Avior's in-flight magazine; billboards with bold type and high-impact imagery; catalogue pages and inserts; red-and-gold key visuals with Christmas-tree graphics; Instagram stories ('Celebra, tú decides cómo', '¡Pruébalo ya!'); and supermarket danglers to win the shelf.\n\nTimeframe: 10 days · Tools: Illustrator, Photoshop, Figma"
+  },
+  "type": "memorybox",
+  "photos": [
+    {
+      "image": "01.jpg",
+      "caption": "Yolo Navidad",
+      "size": 0.6,
+      "at": [
+        60,
+        300,
+        -8
+      ]
+    },
+    {
+      "image": "06.jpg",
+      "caption": "what our Yolovers say...",
+      "size": 0.6,
+      "at": [
+        420,
+        300,
+        6
+      ]
+    },
+    {
+      "image": "07.jpg",
+      "caption": "the reviews!",
+      "size": 0.6,
+      "at": [
+        60,
+        400,
+        4
+      ]
+    },
+    {
+      "image": "08.jpg",
+      "caption": "christmas is almost here",
+      "size": 0.6,
+      "at": [
+        300,
+        40,
+        -6
+      ]
+    },
+    {
+      "image": "09.jpg",
+      "caption": "120 cal · 11g protein",
+      "size": 0.6,
+      "at": [
+        420,
+        430,
+        -5
+      ]
+    },
+    {
+      "image": "10.jpg",
+      "caption": "IG story",
+      "size": 0.6,
+      "at": [
+        130,
+        180,
+        7
+      ]
+    },
+    {
+      "image": "11.jpg",
+      "caption": "tastes like december",
+      "size": 0.6,
+      "at": [
+        250,
+        470,
+        -7
+      ]
+    },
+    {
+      "image": "12.jpg",
+      "caption": "celebra, tú decides cómo",
+      "size": 0.6,
+      "at": [
+        405,
+        470,
+        5
+      ]
+    },
+    {
+      "image": "04.jpg",
+      "caption": "supermarket danglers",
+      "at": [
+        372,
+        70,
+        7
+      ]
+    },
+    {
+      "image": "02.jpg",
+      "caption": "Avior magazine ad",
+      "size": 2,
+      "at": [
+        44,
+        48,
+        -4
+      ]
+    },
+    {
+      "image": "03.jpg",
+      "caption": "stories + ads",
+      "size": 2,
+      "at": [
+        200,
+        262,
+        5
+      ]
+    },
+    {
+      "image": "label.png",
+      "caption": "the limited-edition label",
+      "cutout": true,
+      "size": 3,
+      "at": [
+        40,
+        500,
+        -3
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "number": "20",
+  "title": "Se7en",
+  "year": "1995",
+  "director": "David Fincher",
+  "type": "dvd",
+  "category": "picks",
+  "shelfBook": "book-10-12-orange",
+  "color": "#2c2c2f",
+  "spine": {
+    "title": "SE7EN"
+  },
+  "cover": {
+    "blend": "normal",
+    "opacity": 1
+  },
+  "rating": 5,
+  "heart": true,
+  "review": "No words for this one. It's a classic, and I don't think there's anybody who has seen it that doesn't think it's one of the best movies of all time.",
+  "letterboxd": "https://letterboxd.com/film/se7en/"
+}

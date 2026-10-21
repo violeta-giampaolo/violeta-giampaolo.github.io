@@ -1,0 +1,16 @@
+{
+    "number":  "02",
+    "title":  "SANTOSTEFANO",
+    "year":  "2025",
+    "shelfBook":  "book-02-01-burgundy",
+    "color":  "burgundy",
+    "spine":  {
+                  "title":  "SANTOSTEFANO",
+                  "color":  "#fff"
+              },
+    "cover":  {
+                  "blend":  "screen",
+                  "opacity":  1
+              },
+    "category":  "identities"
+}

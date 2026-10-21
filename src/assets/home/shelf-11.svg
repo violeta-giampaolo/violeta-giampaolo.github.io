@@ -1,0 +1,17 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="337.804" height="90.1469" viewBox="0 0 337.804 90.1469" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="shelf-11-items">
+<g id="books-11-cluster">
+<rect id="book-11-07-pink" width="11.7655" height="86.9975" transform="matrix(4.38683e-08 -1 -1 -4.3555e-08 251.468 90.1469)" fill="#F8B6B8"/>
+<path id="book-11-06-burgundy" d="M202.502 65.9128L116.54 89.3494L113.089 75.2875L198.738 51.8509L202.502 65.9128Z" fill="#8C162C"/>
+<path id="book-11-05-olive" d="M86.1077 89.3494L163.6 44.6637L156.07 31.5392L79.4962 74.9448L78.8918 75.2875L86.1077 89.3494Z" fill="#949C25"/>
+<g id="book-11-04-yellow">
+<path d="M55.8323 78.7373L65.0187 89.3494L78.9797 75.4588L79.0973 75.3417L79.4962 74.9448L128.775 25.9144L118.203 15.8919L55.8323 78.7373Z" fill="#EDD84B"/>
+<path d="M78.9797 75.4588L79.4962 74.9448L79.0973 75.3417L78.9797 75.4588Z" fill="white"/>
+</g>
+<path id="book-11-03-orange" d="M93.5447 10.8354L48.3382 89.3494L36.2509 81.386L80.7322 3.61181L93.5447 10.8354Z" fill="#F67522"/>
+<path id="book-11-02-blue" d="M55.8323 3.61181L32.1412 89.3494L18.8452 86.4425L42.0528 7.62939e-06L55.8323 3.61181Z" fill="#9EC3E4"/>
+<rect id="book-11-01-olive" x="13.8006" y="90.1469" width="13.8006" height="87.1587" transform="rotate(180 13.8006 90.1469)" fill="#949C25"/>
+</g>
+<path id="glyph-11-semicolon-blue" d="M313.83 26.8212V4.29407H337.804V26.8212H313.83ZM325.93 84.3782H313.717L322.99 63.7658H313.83V41.3513H337.804V62.5268L325.93 84.3782Z" fill="#9EC3E4"/>
+</g>
+</svg>

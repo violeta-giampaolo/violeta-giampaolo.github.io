@@ -1,0 +1,21 @@
+{
+  "number": "34",
+  "title": "The Four Agreements",
+  "year": "1997",
+  "author": "Don Miguel Ruiz",
+  "type": "book",
+  "category": "picks",
+  "shelfBook": "book-07-07-olive",
+  "color": "olive",
+  "spine": {
+    "title": "THE FOUR AGREEMENTS"
+  },
+  "cover": {
+    "blend": "normal",
+    "opacity": 1
+  },
+  "aspect": 0.69,
+  "thickness": 0.0649,
+  "synopsis": "Four promises to make to yourself, drawn from Toltec wisdom: be impeccable with your word, don't take anything personally, don't make assumptions, always do your best. Short enough to read in an afternoon, and to reread for years.",
+  "amazon": "https://amzn.to/4Bk4fML"
+}

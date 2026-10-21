@@ -1,0 +1,21 @@
+{
+  "number": "36",
+  "title": "Steal Like an Artist",
+  "year": "2012",
+  "author": "Austin Kleon",
+  "type": "book",
+  "category": "picks",
+  "shelfBook": "book-06-06-yellow",
+  "color": "yellow",
+  "spine": {
+    "title": "STEAL LIKE AN ARTIST"
+  },
+  "cover": {
+    "blend": "normal",
+    "opacity": 1
+  },
+  "aspect": 0.99,
+  "thickness": 0.0949,
+  "synopsis": "Ten things nobody tells you about being creative. Nothing is completely original, so collect what inspires you, remix it, and make something of your own. A little illustrated manifesto.",
+  "amazon": "https://amzn.to/4k8rnYg"
+}

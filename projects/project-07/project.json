@@ -1,0 +1,193 @@
+{
+  "number": "07",
+  "title": "YOLO FIT",
+  "year": "2025",
+  "category": "campaigns",
+  "subtitle": "for The .Wave.Estudio",
+  "shelfBook": "book-04-05-blue",
+  "color": "blue",
+  "spine": {
+    "title": "YOLO FIT",
+    "color": "#fff"
+  },
+  "cover": {
+    "blend": "screen",
+    "opacity": 1
+  },
+  "description": {
+    "en": "A bold visual campaign for a new product line.\n\nYolo FIT expanded the brand into energy, movement and bold self-expression. I crafted a high-impact launch campaign across digital, print and street-level media that felt kinetic and immersive, true to the product's active lifestyle and to Yolo's playful DNA.\n\nBillboards with jagged patterns and vibrant color; branded lunch boxes for PR kits; launch stories ('Actívate, tú decides cómo'); marketing emails; street pole banners; hero key visuals with layered type; and responsive web and mobile banners.\n\nTimeframe: 10 days · Tools: Illustrator, Photoshop"
+  },
+  "type": "memorybox",
+  "photos": [
+    {
+      "image": "07.jpg",
+      "caption": "new year resolutions",
+      "size": 0.6,
+      "at": [
+        140,
+        40,
+        -6
+      ]
+    },
+    {
+      "image": "08.jpg",
+      "caption": "21g de proteína",
+      "size": 0.6,
+      "at": [
+        330,
+        40,
+        5
+      ]
+    },
+    {
+      "image": "09.jpg",
+      "caption": "post-workout",
+      "size": 0.6,
+      "at": [
+        60,
+        540,
+        7
+      ]
+    },
+    {
+      "image": "10.jpg",
+      "caption": "despide el año",
+      "size": 0.6,
+      "at": [
+        200,
+        540,
+        6
+      ]
+    },
+    {
+      "image": "11.jpg",
+      "caption": "the trio",
+      "size": 0.6,
+      "at": [
+        330,
+        540,
+        -5
+      ]
+    },
+    {
+      "image": "12.jpg",
+      "caption": "nueva línea",
+      "size": 0.6,
+      "at": [
+        430,
+        240,
+        4
+      ]
+    },
+    {
+      "image": "01.jpg",
+      "caption": "key visual",
+      "size": 0.6,
+      "at": [
+        160,
+        250,
+        -3
+      ]
+    },
+    {
+      "image": "05.jpg",
+      "caption": "PR lunch boxes",
+      "size": 1.6,
+      "at": [
+        80,
+        440,
+        -4
+      ]
+    },
+    {
+      "image": "04.jpg",
+      "caption": "marketing emails",
+      "size": 1.6,
+      "at": [
+        240,
+        410,
+        5
+      ]
+    },
+    {
+      "image": "06.jpg",
+      "caption": "street pole banners",
+      "size": 1.6,
+      "at": [
+        150,
+        46,
+        4
+      ]
+    },
+    {
+      "image": "03.jpg",
+      "caption": "IG stories",
+      "size": 1.6,
+      "at": [
+        60,
+        250,
+        -5
+      ]
+    },
+    {
+      "image": "02.jpg",
+      "caption": "billboard!",
+      "size": 1.6,
+      "at": [
+        250,
+        200,
+        3
+      ]
+    },
+    {
+      "image": "banner-1.jpg",
+      "cutout": true,
+      "size": 0.5,
+      "at": [
+        40,
+        40,
+        -6
+      ]
+    },
+    {
+      "image": "banner-2.jpg",
+      "cutout": true,
+      "size": 0.5,
+      "at": [
+        446,
+        50,
+        6
+      ]
+    },
+    {
+      "image": "banner-3.jpg",
+      "cutout": true,
+      "size": 0.5,
+      "at": [
+        446,
+        390,
+        -5
+      ]
+    },
+    {
+      "image": "banner-4.jpg",
+      "cutout": true,
+      "size": 0.5,
+      "at": [
+        40,
+        410,
+        5
+      ]
+    },
+    {
+      "image": "banner-5.jpg",
+      "cutout": true,
+      "size": 0.5,
+      "at": [
+        350,
+        400,
+        7
+      ]
+    }
+  ]
+}

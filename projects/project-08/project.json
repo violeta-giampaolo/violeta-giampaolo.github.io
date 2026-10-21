@@ -1,0 +1,16 @@
+{
+    "number":  "08",
+    "title":  "DUCARSIL",
+    "year":  "2026",
+    "category":  "identities",
+    "shelfBook":  "book-06-02-blue",
+    "color":  "blue",
+    "spine":  {
+                  "title":  "DUCARSIL",
+                  "color":  "#fff"
+              },
+    "cover":  {
+                  "blend":  "screen",
+                  "opacity":  1
+              }
+}

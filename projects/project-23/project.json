@@ -1,0 +1,21 @@
+{
+  "number": "23",
+  "title": "American Beauty",
+  "year": "1999",
+  "director": "Sam Mendes",
+  "type": "dvd",
+  "category": "picks",
+  "shelfBook": "book-03-07-yellow",
+  "color": "#2c2c2f",
+  "spine": {
+    "title": "AMERICAN BEAUTY"
+  },
+  "cover": {
+    "blend": "normal",
+    "opacity": 1
+  },
+  "rating": 4.5,
+  "heart": false,
+  "review": "Life's about being the plastic bag.",
+  "letterboxd": "https://letterboxd.com/film/american-beauty/"
+}

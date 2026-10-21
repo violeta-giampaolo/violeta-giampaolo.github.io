@@ -1,0 +1,21 @@
+{
+  "number": "32",
+  "title": "The Alchemist",
+  "year": "1988",
+  "author": "Paulo Coelho",
+  "type": "book",
+  "category": "picks",
+  "shelfBook": "book-06-01-orange",
+  "color": "orange",
+  "spine": {
+    "title": "THE ALCHEMIST"
+  },
+  "cover": {
+    "blend": "normal",
+    "opacity": 1
+  },
+  "aspect": 0.6523,
+  "thickness": 0.0575,
+  "synopsis": "Santiago, a young Andalusian shepherd, dreams of treasure at the Egyptian pyramids and sets out to find it. A short fable about listening to your heart, reading the signs, and following your own path.",
+  "amazon": "https://amzn.to/4icscgn"
+}

@@ -1,0 +1,17 @@
+{
+    "number":  "05",
+    "title":  "Krön",
+    "year":  "2026",
+    "shelfBook":  "book-03-10-yellow",
+    "color":  "yellow",
+    "spine":  {
+                  "title":  "Krön",
+                  "stack":  true,
+                  "color":  "#fff"
+              },
+    "cover":  {
+                  "blend":  "screen",
+                  "opacity":  1
+              },
+    "category":  "identities"
+}

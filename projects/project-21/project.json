@@ -1,0 +1,21 @@
+{
+  "number": "21",
+  "title": "Midnight in Paris",
+  "year": "2011",
+  "director": "Woody Allen",
+  "type": "dvd",
+  "category": "picks",
+  "shelfBook": "book-10-13-burgundy",
+  "color": "#2c2c2f",
+  "spine": {
+    "title": "MIDNIGHT IN PARIS"
+  },
+  "cover": {
+    "blend": "normal",
+    "opacity": 1
+  },
+  "rating": 4.5,
+  "heart": true,
+  "review": "I am obsessed! Instead of a Van Gogh reference for the movie cover, I would've made the painting Dalí described in the movie, with Owen's face and Dalí's signature clocks dialing midnight. Much more related in meaning, and also referenced.\n\nOn the other hand, it is a movie that helps you understand \"the golden age syndrome\" to perfection, and it's just amazing to watch.",
+  "letterboxd": "https://letterboxd.com/film/midnight-in-paris/"
+}

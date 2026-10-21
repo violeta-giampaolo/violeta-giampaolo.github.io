@@ -1,0 +1,16 @@
+{
+    "number":  "09",
+    "title":  "HEKLE",
+    "year":  "2024",
+    "shelfBook":  "book-07-03-olive",
+    "color":  "olive",
+    "spine":  {
+                  "title":  "HEKLE",
+                  "color":  "#fff"
+              },
+    "cover":  {
+                  "blend":  "screen",
+                  "opacity":  1
+              },
+    "category":  "identities"
+}

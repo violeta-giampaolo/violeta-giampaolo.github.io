@@ -1,0 +1,2734 @@
+:root {
+  --shelf-bg: #e7e7e9;
+  --ink: #1d1d1f;
+  --idle-opacity: 0.55;
+  --light-speed: 220ms;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  /* Keep room for the scrollbar so the width never jumps */
+  scrollbar-gutter: stable;
+}
+
+html,
+body {
+  margin: 0;
+  background: #fff;
+  color: var(--ink);
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.svg-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* Paper grain over the whole page (generated in PaperTexture.jsx) */
+.paper-texture {
+  position: fixed;
+  inset: 0;
+  z-index: 6; /* over the shelf scene, under the book stage (7) */
+  pointer-events: none;
+  /* No blend mode: the grain is already semi-transparent, and Chrome
+     mis-draws blend modes over the clipped silhouette. */
+}
+
+/* The same grain on the dimmed background and on the outside of every book
+   and binder (cover, spine, lining, top edge) — but never on the pages. */
+.book-scrim::after,
+.book3d > div::after,
+.b3__face::after,
+.b3__top::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--paper) 0 0 / var(--paper-size) repeat;
+  pointer-events: none;
+}
+
+/* ---------- Category menu (Figma "Group 1", set in DM Mono) ---------- */
+
+.shelf-menu {
+  display: flex;
+  align-items: stretch;
+  font: 11px/1 'DM Mono', ui-monospace, monospace;
+  color: #8a8a8d; /* idle: medium grey; black + bold when hovered or chosen */
+  transition: font-size 0s;
+  white-space: nowrap;
+}
+
+.shelf-menu--desktop {
+  position: absolute;
+  left: 493px;
+  bottom: calc(900px - 175px + 12.4px); /* sits just above the shelf, like Figma */
+}
+
+.shelf-menu--phone {
+  margin: 0 0 10px;
+}
+
+.shelf-menu__item {
+  display: flex;
+  align-items: stretch;
+}
+
+.shelf-menu__rule {
+  width: 0.7px;
+  margin: 0 0.36em;
+  background: #8a8a8d;
+}
+
+.shelf-menu button {
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+/* An invisible bold copy reserves the bold width, so nothing jumps */
+.shelf-menu__label {
+  display: inline-grid;
+}
+
+.shelf-menu__label::after {
+  content: attr(data-text);
+  font-weight: 500;
+  visibility: hidden;
+  height: 0;
+}
+
+.shelf-menu button:hover,
+.shelf-menu button:focus-visible,
+.shelf-menu button[aria-pressed='true'] {
+  font-weight: 500;
+  color: #000;
+  outline: none;
+}
+
+/* Filtered out: light grey, quiet */
+.shelf-pop.is-dimmed :is(path, rect, polygon, circle, ellipse, text) {
+  fill: #dddde0 !important;
+  transition: fill 350ms ease;
+}
+
+.shelf-pop.is-dimmed .shelf-item {
+  cursor: default;
+}
+
+.shelf-pop :is(path, rect, polygon, circle, ellipse, text) {
+  transition: fill 350ms ease;
+}
+
+/* ---------- Title ---------- */
+
+.site-title {
+  margin: 0;
+  font-family: 'Archivo Black', 'Arial Black', sans-serif;
+  font-weight: normal;
+  line-height: 1;
+  white-space: nowrap;
+  color: #000;
+}
+
+.site-title span {
+  display: inline-block;
+  cursor: default;
+}
+
+/* Figma: right edge lines up with the shelf, 49px */
+.site-title--desktop {
+  position: absolute;
+  right: calc(1440px - 1377.3px);
+  top: 115.8px;
+  height: 53px;
+  display: flex;
+  align-items: flex-end;
+  font-size: 49px;
+}
+
+.phone-title {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding-bottom: calc(14px * var(--s));
+}
+
+.site-title--phone {
+  font-size: calc(49px * var(--s));
+}
+
+/* ---------- Silhouette quote ---------- */
+
+/* Covers the whole stage; only the figure itself reacts to the mouse */
+.silhouette-quote {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.silhouette-hit {
+  fill: transparent;
+  pointer-events: all;
+  cursor: default;
+}
+
+.silhouette-fill {
+  opacity: 0;
+  transition: opacity 450ms ease;
+  pointer-events: none;
+}
+
+.silhouette-quote:has(.silhouette-hit:hover) .silhouette-fill {
+  opacity: 1;
+}
+
+.silhouette-fill text {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: italic;
+  fill: #050505;
+}
+
+/* ---------- Shelf ---------- */
+
+.bookshelf--grid {
+  position: absolute;
+  left: 493px;
+  top: 175px;
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  column-gap: 20px;
+  row-gap: 4px;
+}
+
+.bookshelf--column {
+  display: flex;
+  flex-direction: column;
+  transform-origin: top left;
+}
+
+.shelf {
+  position: relative;
+  background: var(--shelf-bg);
+}
+
+.shelf-items {
+  position: absolute;
+}
+
+.shelf-svg {
+  display: block;
+  overflow: visible;
+}
+
+/* Idle: faded. --glow (0–1) is set by the cursor trail on desktop:
+   0 = idle, 1 = full. (No blur filter: on ~110 items it made scrolling stutter.) */
+.shelf-item {
+  opacity: calc(var(--idle-opacity) + (1 - var(--idle-opacity)) * var(--glow, 0));
+}
+
+/* Pop-out: the hovered item springs forward; neighbours in the trail swell slightly */
+.shelf-pop {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(calc(1 + 0.03 * var(--glow, 0) + 0.14 * var(--pop, 0)));
+}
+
+.home--touch .shelf-item {
+  transition: opacity var(--light-speed) ease;
+}
+
+.shelf-item.is-interactive {
+  cursor: pointer;
+  outline: none;
+}
+
+/* Project title printed along a book's spine */
+/* Stretched to fill the whole spine in spines.js — keep font in sync with SPINE_FONT there */
+.spine-text {
+  font-family: 'Oswald', 'Arial Narrow', sans-serif;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+/* Lit: swept on touch screens, or keyboard focused */
+.shelf-item.is-swept {
+  opacity: 1;
+  filter: none;
+}
+
+/* Keyboard focus wins over the cursor trail's inline filter */
+.shelf-item.is-interactive:focus-visible {
+  opacity: 1;
+  filter: none !important;
+}
+
+/* ---------- Desktop layout ---------- */
+
+/* The homepage never scrolls: it always rests on the bookshelf, centred.
+   Scrolling only stretches it a little and it bounces back (useElasticEdges). */
+.home--desktop {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+.stage-frame {
+  position: absolute;
+  left: 0;
+}
+
+.stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1440px;
+  height: 900px;
+  transform-origin: top left;
+  will-change: transform; /* its own GPU layer, so scrolling doesn't repaint it */
+}
+
+.stage-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ---------- Phone layout ---------- */
+
+.home--phone {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: hidden;
+}
+
+.phone-stack {
+  position: relative;
+}
+
+/* ---------- Book stage: a book flies off the shelf ---------- */
+
+.book-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 7;
+  overflow: hidden;
+  overscroll-behavior: contain;
+  touch-action: none;
+}
+
+/* Figma: shelf blurred behind a light scrim */
+.book-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(229, 229, 231, 0.45);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+
+.book-slot {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.book-bounce {
+  position: absolute;
+  inset: 0;
+}
+
+/* The "camera". Its position (perspective-origin) is set in Book3D.jsx and
+   travels with the book: straight at the spine on the shelf, above the book
+   once it's presented, so we look down onto its top edge like in Figma. */
+.book-persp {
+  position: absolute;
+  inset: 0;
+  perspective: 2400px;
+}
+
+.book3d {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-style: preserve-3d;
+  transform-origin: 50% 50%;
+  pointer-events: auto;
+  cursor: pointer;
+  will-change: transform;
+}
+
+.book-slot.is-center {
+  z-index: 2; /* always in front of the books beside it */
+}
+
+.book-slot.is-prev .book3d {
+  cursor: w-resize;
+}
+
+.book-slot.is-next .book3d {
+  cursor: e-resize;
+}
+
+/* No outlines: like the spines on the shelf, the faces are told apart by
+   colour alone (darker spine, cream pages on top) */
+.book3d > div {
+  position: absolute;
+  left: 0;
+  top: 0;
+  backface-visibility: hidden;
+}
+
+/* Cover: the book's colour, with the project's texture blended on top.
+   "isolation" keeps the blend inside the cover (it mixes with the colour
+   only, not with the page behind). */
+.book3d__cover {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.book3d__texture {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+}
+
+.book3d__spine {
+  overflow: hidden;
+}
+
+/* Same stretched title as the shelf spines (font in sync with spines.js) */
+.book3d__spine-title {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  font-family: 'Oswald', 'Arial Narrow', sans-serif;
+  font-weight: 600;
+}
+
+/* Paper block seen from above, with the lines of the pages */
+.book3d__pages {
+  position: absolute;
+  inset: 6% 0.6% 6% 3%;
+  background: repeating-linear-gradient(to bottom, #f1eee6 0 2px, #d8d2c3 2px 2.6px);
+}
+
+.book-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 4vh;
+  margin: 0;
+  text-align: center;
+  font: 15px Newsreader, Georgia, serif;
+  letter-spacing: 0.04em;
+  white-space: pre;
+  color: rgba(26, 23, 19, 0.6);
+  pointer-events: none;
+}
+
+/* ---------- Ring binder (Figma "3 - Opened: two-page spread") ---------- */
+
+/* Covers the stage so clicks outside the binder close it; the dimmed shelf
+   stays visible behind */
+.binder {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow: hidden;
+}
+
+/* The binder in 3D: back board → spine → front cover, hinged together */
+.b3 {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-style: preserve-3d;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+.b3__back,
+.b3__spine,
+.b3__front {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+.b3__back {
+  left: 0;
+  width: 100%;
+}
+
+.b3__spine,
+.b3__front {
+  transform-origin: right center;
+}
+
+.b3__face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+}
+
+.b3__face--out {
+  transform: rotateY(180deg);
+}
+
+.b3__cover {
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* The page block seen from above, only while the binder is still closed */
+.b3__top {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: top center;
+  transform: rotateX(90deg);
+  backface-visibility: hidden;
+}
+
+.b3__page {
+  position: absolute;
+  transform-origin: 0 0;
+  transform-style: preserve-3d;
+  cursor: e-resize;
+}
+
+.b3__front .b3__page {
+  cursor: w-resize;
+}
+
+.b3 .page {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+}
+
+.b3__ring {
+  position: absolute;
+  border-style: solid;
+  border-color: #2b2824;
+  border-radius: 999px;
+  transform: translateY(-50%) translateZ(3px);
+  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.4));
+  pointer-events: none;
+}
+
+/* ---------- Memory boxes (campaigns): a hollow book-box ---------- */
+
+/* Inside of the lid: a cream endpaper with the title and a sticky note */
+.box-lid {
+  position: absolute;
+  inset: 0;
+  padding: 70px 56px;
+  color: #1a1713;
+  background: #f4f0e6;
+  box-shadow: inset 0 0 0 1px rgba(26, 23, 19, 0.08);
+}
+
+.box-lid::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--paper) 0 0 / var(--paper-size) repeat;
+  pointer-events: none;
+}
+
+.box-lid__title {
+  margin: 0;
+  font: italic 400 54px/1 Fraunces, Georgia, serif;
+}
+
+.box-lid__subtitle {
+  margin: 10px 0 0;
+  font: 14px Newsreader, Georgia, serif;
+  color: rgba(26, 23, 19, 0.6);
+}
+
+.sticky-note {
+  position: relative;
+  margin-top: 42px;
+  padding: 22px 22px 16px;
+  rotate: -2deg;
+  font: 10.5px/1.5 'DM Mono', ui-monospace, monospace;
+  color: #2b2620;
+  background: linear-gradient(180deg, #f7e9a0, #f3df84);
+  box-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.08),
+    0 10px 18px -8px rgba(0, 0, 0, 0.35);
+}
+
+/* the strip of tape holding it on */
+.sticky-note::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -11px;
+  width: 92px;
+  height: 22px;
+  translate: -50% 0;
+  rotate: 3deg;
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.sticky-note p {
+  margin: 0 0 0.8em;
+}
+
+/* On phones the note lies loose in the box and can be pushed around */
+/* The photos and cards: a flat layer over the open box (see MemoryBoxItems) */
+.box-overlay {
+  position: absolute;
+  z-index: 2;
+  animation: box-items-in 0.35s ease-out;
+}
+.memory-box__items {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+}
+@keyframes box-items-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* The box, seen from above: floor + four inner walls (flat illustration) */
+.memory-box {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  touch-action: none;
+}
+
+.memory-box__floor {
+  position: absolute;
+  background: var(--floor);
+  box-shadow: inset 0 0 26px rgba(0, 0, 0, 0.18);
+}
+
+.memory-box__floor::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--paper) 0 0 / var(--paper-size) repeat;
+}
+
+.memory-box__wall {
+  position: absolute;
+}
+
+.memory-box__wall--top {
+  left: 0;
+  right: 0;
+  top: 0;
+  background: var(--wall-b);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 34px) 100%, 34px 100%);
+}
+
+.memory-box__wall--bottom {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--wall-c);
+  clip-path: polygon(34px 0, calc(100% - 34px) 0, 100% 100%, 0 100%);
+}
+
+.memory-box__wall--left {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--wall-a);
+  clip-path: polygon(0 0, 100% 34px, 100% calc(100% - 34px), 0 100%);
+}
+
+.memory-box__wall--right {
+  top: 0;
+  bottom: 0;
+  right: 0;
+  background: var(--wall-a);
+  clip-path: polygon(0 34px, 100% 0, 100% 100%, 0 calc(100% - 34px));
+}
+
+/* A polaroid: white frame, picture in its own proportions, sharpie caption */
+.polaroid {
+  position: absolute;
+  margin: 0;
+  padding: 10px 10px 0;
+  background: #fbfaf6;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.15),
+    0 8px 16px -6px rgba(0, 0, 0, 0.35);
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  transition: box-shadow 0.2s, scale 0.2s;
+}
+
+.polaroid:hover {
+  scale: 1.02;
+}
+
+.polaroid.is-dragging {
+  cursor: grabbing;
+  scale: 1.05;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    0 22px 34px -8px rgba(0, 0, 0, 0.45);
+}
+
+/* Memory-game cards: rounded square, flip on tap */
+.mcard {
+  position: absolute;
+  perspective: 600px;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+
+.mcard__inner {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transition: transform 0.45s cubic-bezier(0.45, 0, 0.2, 1);
+}
+
+.mcard.is-up .mcard__inner {
+  transform: rotateY(180deg);
+}
+
+.mcard__face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12%;
+  backface-visibility: hidden;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    0 6px 10px -4px rgba(0, 0, 0, 0.35);
+}
+
+.mcard__front {
+  transform: rotateY(180deg);
+  transition: box-shadow 0.8s ease;
+}
+
+.mcard.is-matched .mcard__front {
+  box-shadow:
+    0 0 0 3px #fff,
+    0 6px 12px -4px rgba(0, 0, 0, 0.35);
+}
+
+.mcard.is-dragging {
+  scale: 1.06;
+  cursor: grabbing;
+}
+
+/* A cutout (e.g. a label): no white frame, just the object with a soft shadow */
+.polaroid.is-cutout {
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.3));
+}
+
+.polaroid.is-cutout.is-dragging {
+  box-shadow: none;
+  filter: drop-shadow(0 18px 18px rgba(0, 0, 0, 0.35));
+}
+
+.polaroid img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+}
+
+.polaroid figcaption {
+  padding: 8px 4px 12px;
+  min-height: 40px;
+  font: 13px/1.2 'Permanent Marker', 'Comic Sans MS', cursive;
+  color: #24211c;
+  text-align: center;
+}
+
+.binder.is-box .b3__page {
+  cursor: default;
+}
+
+/* ---------- Magazines: thin, glossy, no rings or punch holes ---------- */
+
+.binder.is-mag .page__hole {
+  display: none;
+}
+
+.binder.is-mag .page {
+  box-shadow: none;
+}
+
+/* A soft sheen across every magazine page and cover, like coated paper */
+.gloss,
+.binder.is-mag .page::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(115deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.22) 44%, rgba(255, 255, 255, 0) 58%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0) 40%, rgba(0, 0, 0, 0.05));
+  mix-blend-mode: screen;
+}
+
+.binder.is-mag .page--left::after {
+  background:
+    linear-gradient(245deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.18) 44%, rgba(255, 255, 255, 0) 58%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0) 40%, rgba(0, 0, 0, 0.05));
+}
+
+/* PDF pages fill the page */
+.page-pdf {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* A sheet turning around the rings */
+.leaf {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  transform-style: preserve-3d;
+}
+
+.leaf__face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+}
+
+.leaf__face--back {
+  transform: rotateY(180deg);
+}
+
+.leaf__shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.05) 75%);
+}
+
+.leaf__shade--back {
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.05) 75%);
+}
+
+/* ---------- Binder pages (560 × 720) ---------- */
+
+.page {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #efede6;
+  color: #1a1713;
+  font-family: Newsreader, Georgia, serif;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+}
+
+.page p {
+  margin: 0;
+}
+
+.page__fold {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 70px;
+  pointer-events: none;
+}
+
+.page--left .page__fold {
+  right: 0;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.24));
+}
+
+.page--right .page__fold {
+  left: 0;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.24), rgba(0, 0, 0, 0));
+}
+
+/* Punch holes: you see the dark background through them */
+.page__hole {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--lining, #121110); /* the cover shows through the holes */
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+  transform: translateY(-50%);
+}
+
+.page--left .page__hole {
+  right: 21px;
+}
+
+.page--right .page__hole {
+  left: 21px;
+}
+
+.page--cover {
+  isolation: isolate;
+}
+
+.page-cover__texture {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Title page */
+.page-title__story {
+  position: absolute;
+  top: 44px;
+  left: 36px;
+  right: 36px;
+  bottom: 44px;
+  overflow: hidden;
+  columns: 2;
+  column-gap: 16px;
+  font-size: 8.5px;
+  line-height: 1.35;
+  color: rgba(26, 23, 19, 0.09);
+}
+
+.page-title__number,
+.page-title__title,
+.page-title__subtitle {
+  position: relative;
+  text-align: center;
+  padding: 0 60px;
+}
+
+.page-title__number {
+  margin-top: 262px !important;
+  font-size: 22px;
+}
+
+.page-title__title {
+  margin: 20px 0 0;
+  font: italic 400 58px / 1 Fraunces, Georgia, serif;
+}
+
+.page-title__subtitle {
+  margin-top: 28px !important;
+  font-size: 22px;
+}
+
+/* Text page (EN / ES) */
+.page-text__head {
+  position: absolute;
+  top: 44px;
+  left: 48px;
+  width: 300px;
+  font-weight: 500;
+  font-size: 10px;
+  line-height: 1.4;
+  letter-spacing: 0.6px;
+}
+
+.page-text__body {
+  position: absolute;
+  top: 250px;
+  left: 48px;
+  width: 440px;
+  bottom: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.page-text__label {
+  margin-bottom: 14px !important;
+  font-weight: 500;
+  font-size: 9px;
+  letter-spacing: 0.72px;
+}
+
+.page-text__copy {
+  font-size: 11.5px;
+  line-height: 1.45;
+  white-space: pre-line; /* blank lines in project.json become paragraphs */
+}
+
+.page-text__body .is-second .page-text__copy {
+  color: rgba(26, 23, 19, 0.45);
+}
+
+/* Picture pages: Full / Framed / Pair */
+.page-image {
+  position: absolute;
+  display: block;
+  object-fit: cover;
+  background: #d8d4c8;
+}
+
+.page-image--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  font-size: 9px;
+  letter-spacing: 0.72px;
+  color: rgba(26, 23, 19, 0.4);
+}
+
+.page-pic--full .page-pic__one {
+  left: 28px;
+  top: 28px;
+  width: 504px;
+  height: 620px;
+}
+
+.page-pic--framed .page-pic__one {
+  left: 80px;
+  top: 110px;
+  width: 400px;
+  height: 500px;
+}
+
+.page-pic--pair .page-pic__one {
+  left: 60px;
+  top: 48px;
+  width: 440px;
+  height: 300px;
+}
+
+.page-pic--pair .page-pic__two {
+  left: 60px;
+  top: 368px;
+  width: 440px;
+  height: 290px;
+}
+
+/* Wide: one landscape picture shown whole, centred on the page */
+.page-pic--wide .page-pic__one {
+  left: 28px;
+  top: 50%;
+  width: 504px;
+  height: auto;
+  translate: 0 -55%;
+}
+
+.page-pic--wide .page-pic__caption {
+  top: auto;
+  bottom: 120px;
+}
+
+.page-pic__caption {
+  position: absolute;
+  left: 28px;
+  top: 676px;
+  width: 360px;
+  font-size: 10.5px;
+  color: rgba(26, 23, 19, 0.7);
+}
+
+.page-pic--framed /* Wide: one landscape picture shown whole, centred on the page */
+.page-pic--wide .page-pic__one {
+  left: 28px;
+  top: 50%;
+  width: 504px;
+  height: auto;
+  translate: 0 -55%;
+}
+
+.page-pic--wide .page-pic__caption {
+  top: auto;
+  bottom: 120px;
+}
+
+.page-pic__caption {
+  left: 80px;
+  top: 640px;
+}
+
+.page__folio {
+  position: absolute;
+  right: 28px;
+  top: 676px;
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.6px;
+}
+
+/* Phones: one page at a time and bigger text, so it stays readable */
+.binder.is-single .page-text__head {
+  width: 440px;
+  font-size: 15px;
+}
+
+.binder.is-single .page-text__label {
+  font-size: 13px;
+}
+
+.binder.is-single .page-text__copy {
+  font-size: 17px;
+}
+
+.binder.is-single .page-pic__caption,
+.binder.is-single .page__folio {
+  font-size: 15px;
+  top: 668px;
+}
+
+/* ---------- Sound toggle (temporary styling) ---------- */
+
+/* Top-left controls: menu + mute (above the page, below open windows) */
+.site-controls {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.icon-btn:hover,
+.icon-btn:focus-visible {
+  background: #fff;
+}
+.icon-btn svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.icon-btn svg .fill {
+  fill: currentColor;
+}
+
+.site-menu {
+  position: absolute;
+  top: 0;
+  left: 48px;
+  display: flex;
+  flex-direction: column;
+  min-width: 150px;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--ink);
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+.site-menu button {
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--ink);
+  font: 13px 'DM Mono', ui-monospace, monospace;
+  text-align: left;
+  cursor: pointer;
+}
+.site-menu button:hover,
+.site-menu button:focus-visible {
+  background: #F67522;
+  color: #fff;
+}
+
+/* ---------- Folded paper: About note & Resume letter ---------- */
+
+.fold-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  perspective: 1800px;
+}
+
+.fold-scrim.is-narrow {
+  justify-content: flex-start;
+  padding: 16px 0 96px;
+  overflow-y: auto;
+}
+
+/* Phones: the paper sits in the middle of the screen (auto margins still
+   let a very tall page scroll) and the buttons stay at the bottom. */
+.fold-scrim.is-narrow .fold-stage {
+  margin-top: auto;
+  margin-bottom: auto;
+}
+.fold-scrim.is-narrow .fold-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(22px + env(safe-area-inset-bottom));
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  margin: 0;
+}
+
+.fold-scrim__bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(229, 229, 231, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.fold-stage {
+  position: relative;
+  flex: none;
+  perspective: 1800px;
+}
+
+.fold-paper {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  transform-style: preserve-3d;
+  color: #1a1713;
+}
+
+.fold-panel,
+.fold-flap {
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+
+.fold-flap {
+  transform-style: preserve-3d;
+}
+
+.fold-panel,
+.fold-face {
+  overflow: hidden;
+  background: #f4f0e6;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+.fold-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+}
+
+.fold-face--back {
+  transform: rotateY(180deg) rotateZ(180deg);
+  background: #ebe6da;
+}
+
+/* Paper grain on every part of the sheet */
+.fold-panel::after,
+.fold-face::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--paper) 0 0 / var(--paper-size) repeat;
+  pointer-events: none;
+}
+
+.fold-slice {
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+
+.fold-shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0));
+}
+
+.fold-shade--up {
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0));
+}
+
+.fold-crease {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  z-index: 3;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.09), rgba(0, 0, 0, 0.02));
+  pointer-events: none;
+}
+
+.fold-footer {
+  position: relative;
+  margin-top: 18px;
+}
+
+.fold-footer__row {
+  display: flex;
+  gap: 10px;
+}
+
+.fold-page {
+  padding: 9px 18px;
+  font: 12px/1 'DM Mono', ui-monospace, monospace;
+  color: #1a1713;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid #1a1713;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.fold-page:hover {
+  color: #fff;
+  background: #1a1713;
+}
+
+/* A sheet of the letter (front or back), both in the same spot */
+.fold-swap {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+}
+
+.fold-sheet {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  overflow: hidden;
+  color: #1a1713;
+  background: #f4f0e6;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+.fold-sheet::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--paper) 0 0 / var(--paper-size) repeat;
+  pointer-events: none;
+}
+
+/* The arrow on the strip of the sheet peeking out behind */
+.fold-peek {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  z-index: 4;
+  transform: translateY(-50%);
+  font: 22px/1 'DM Mono', ui-monospace, monospace;
+  color: #f67522;
+  animation: fold-nudge 1.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes fold-nudge {
+  50% {
+    transform: translate(4px, -50%);
+  }
+}
+
+.resume__head--small h2 {
+  font-size: 15px !important;
+}
+
+.resume__folio {
+  position: absolute;
+  right: 50px;
+  bottom: 30px;
+  font-size: 9px;
+  color: rgba(26, 23, 19, 0.5);
+}
+
+.fold-print {
+  padding: 9px 20px;
+  font: 12px/1 'DM Mono', ui-monospace, monospace;
+  letter-spacing: 0.06em;
+  color: #fff;
+  background: #1a1713;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.fold-print:hover {
+  background: #f67522;
+}
+
+/* About note (440 × 700) */
+.note__page {
+  padding: 42px 40px;
+  height: 100%;
+  font: 11.5px/1.6 'DM Mono', ui-monospace, monospace;
+}
+
+.note__greeting {
+  margin: 0;
+  font: italic 22px/1.2 Fraunces, Georgia, serif;
+}
+
+.note__title {
+  margin: 4px 0 22px;
+  font: italic 400 22px/1.2 Fraunces, Georgia, serif;
+}
+
+.note__text {
+  margin: 0 0 14px;
+}
+
+/* Privacy note: small headings between short paragraphs */
+.privacy h3 {
+  margin: 14px 0 3px;
+  font: 500 11.5px/1.4 'DM Mono', ui-monospace, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #f67522;
+}
+.privacy p {
+  margin: 0;
+}
+.privacy .privacy__updated {
+  margin-top: 18px;
+  color: rgba(26, 23, 19, 0.5);
+}
+
+/* The menu's last, quieter item */
+.site-menu button.is-small {
+  margin-top: 4px;
+  font-size: 11px;
+  color: rgba(26, 23, 19, 0.6);
+}
+
+.note__signature {
+  margin: 22px 0 0;
+  text-align: right;
+  font: italic 24px/1 Fraunces, Georgia, serif;
+  color: #f67522;
+}
+
+/* Resume (A4: 595 × 842) — Harvard format */
+.resume {
+  height: 100%;
+  position: relative;
+  padding: 38px 50px;
+  font: 11px/1.42 Newsreader, 'Times New Roman', serif;
+}
+
+.resume p,
+.resume ul {
+  margin: 0;
+}
+
+.resume__head {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.resume__head h2 {
+  margin: 0 0 4px;
+  font: 500 25px/1.1 Newsreader, 'Times New Roman', serif;
+  letter-spacing: 0.02em;
+}
+
+.resume h3 {
+  margin: 10px 0 5px;
+  padding-bottom: 2px;
+  font: 500 12.5px/1.2 Newsreader, 'Times New Roman', serif;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: 0.75px solid #1a1713;
+}
+
+.resume__entry {
+  margin-bottom: 5px;
+}
+
+.resume__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.resume__role {
+  font-style: italic;
+}
+
+.resume ul {
+  padding-left: 16px;
+}
+
+.resume__skill {
+  margin-bottom: 3px !important;
+}
+
+.print-only {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .print-only,
+  .print-only * {
+    visibility: visible;
+  }
+
+  .print-only {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 210mm;
+    font-size: 10.5pt;
+  }
+
+  .print-only .resume {
+    padding: 18mm 20mm;
+    height: 297mm;
+    break-after: page;
+  }
+}
+
+/* ---------- Playlist carousel (the slide projector) ---------- */
+
+.carousel-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  overflow: hidden;
+  background: rgba(229, 229, 231, 0.55);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+
+/* The camera: in the middle of the screen, a little above the wheel */
+.carousel {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  width: 0;
+  height: 0;
+  perspective: 1300px;
+}
+
+.carousel__wheel {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-style: preserve-3d;
+}
+
+/* One slide: its left edge on the central axis, fanning outwards */
+.slide {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 50%;
+  transform-style: preserve-3d;
+}
+
+.slide__mount {
+  position: absolute;
+  inset: 0;
+  display: block;
+  padding: 4%;
+  background: #f5f2ea;
+  border-radius: 3px;
+  box-shadow: 0 0 0 0.5px rgba(26, 23, 19, 0.25);
+  cursor: pointer;
+}
+
+.slide__mount img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Notes floating beside the wheel */
+.carousel-note {
+  position: absolute;
+  top: 48%;
+  translate: 0 -50%;
+  font: 15px/1.45 'DM Mono', ui-monospace, monospace;
+  color: #1a1713;
+  pointer-events: none;
+}
+
+.carousel-note p {
+  margin: 0 0 0.9em;
+}
+
+.carousel-note--left {
+  left: var(--gap);
+  text-align: center;
+}
+
+.carousel-note--right {
+  right: var(--gap);
+  text-align: right;
+}
+
+.carousel-title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12vh;
+  margin: 0;
+  text-align: center;
+  font: italic 30px/1.1 Fraunces, Georgia, serif;
+  color: #1a1713;
+  pointer-events: none;
+}
+
+/* Phones: her note on top, the wheel lower down, and under it the name of
+   the raised playlist (mono) above a smaller "my playlists" */
+.carousel.is-narrow {
+  top: 58%;
+}
+
+.carousel-intro {
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  top: max(64px, 8vh);
+  font: 12.5px/1.5 'DM Mono', ui-monospace, monospace;
+  color: #1a1713;
+  text-align: center;
+  pointer-events: none;
+}
+.carousel-intro p {
+  margin: 0 0 0.75em;
+}
+
+.carousel-caption {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 14vh;
+  text-align: center;
+  color: #1a1713;
+  pointer-events: none;
+}
+.carousel-caption__name {
+  min-height: 1.3em;
+  margin: 0 0 6px;
+  font: 500 19px/1.3 'DM Mono', ui-monospace, monospace;
+}
+.carousel-caption__title {
+  margin: 0;
+  font: italic 16px/1.1 Fraunces, Georgia, serif;
+  color: rgba(26, 23, 19, 0.7);
+}
+.carousel-caption.is-narrow {
+  bottom: 11vh;
+}
+
+.carousel-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 5vh;
+  margin: 0;
+  text-align: center;
+  font: 12px 'DM Mono', ui-monospace, monospace;
+  color: rgba(26, 23, 19, 0.55);
+  pointer-events: none;
+}
+
+/* ---------- Contact wallet (the ♥) ---------- */
+
+.wallet-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(229, 229, 231, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* 380 × 280: the back, three card slots, the front pocket and the flap */
+.wallet {
+  position: relative;
+  width: 380px;
+  height: 280px;
+  margin-top: 150px; /* room for the cards rising out */
+  /* Flat on purpose (no preserve-3d): in a shared 3D space Safari sorts the
+     layers by depth and drew the tilting gold card through the front pocket. */
+  perspective: 1200px;
+}
+
+@media (max-width: 420px) {
+  .wallet {
+    scale: 0.84;
+  }
+}
+
+.wallet__back,
+.wallet__pocket,
+.wallet__flap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-radius: 14px;
+  background: linear-gradient(160deg, #a5233d, #7a1226);
+}
+
+.wallet__back {
+  inset: 0;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.25);
+}
+
+.wallet__slot {
+  position: absolute;
+  left: 20px;
+  top: 64px;
+  width: 340px;
+  height: 214px;
+  cursor: pointer;
+}
+
+.wallet__slot.is-active {
+  z-index: 2; /* the chosen card comes in front of the others */
+  cursor: default;
+}
+
+.wallet__pocket {
+  top: 80px;
+  bottom: 0;
+  z-index: 3;
+  border-radius: 6px 6px 14px 14px;
+  box-shadow:
+    0 -6px 14px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  pointer-events: none;
+}
+
+.wallet__stitch {
+  position: absolute;
+  inset: 9px;
+  border: 1.5px dashed rgba(248, 182, 184, 0.45);
+  border-radius: 6px 6px 10px 10px;
+}
+
+.wallet__brand {
+  position: absolute;
+  right: 24px;
+  bottom: 18px;
+  font: italic 22px/1 Fraunces, Georgia, serif;
+  color: rgba(248, 182, 184, 0.75);
+}
+
+.wallet__flap {
+  top: 0;
+  height: 150px;
+  z-index: 4;
+  transform-origin: 50% 0;
+  border-radius: 14px 14px 30px 30px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+  backface-visibility: hidden;
+}
+
+.wallet-hint {
+  margin: 22px 0 0;
+  font: 12px 'DM Mono', ui-monospace, monospace;
+  color: rgba(26, 23, 19, 0.55);
+}
+
+/* The folded $2 bill (her photo) in the middle compartment: it sticks up
+   over the top edge, behind the cards. A real bill folded in half is ~78 mm
+   wide — about 0.9 of a card — so it's drawn at that scale. */
+.wallet__bill {
+  position: absolute;
+  left: 50%;
+  top: -128px;
+  margin-left: -120px;
+  rotate: 7deg;
+  cursor: pointer;
+}
+
+.bill {
+  display: block;
+  width: 282px;
+  height: auto;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.25));
+  user-select: none;
+}
+.bill__luck {
+  position: absolute;
+  left: 20px;
+  top: 6px;
+  padding: 1px 7px;
+  font: 9px/1.5 'DM Mono', ui-monospace, monospace;
+  white-space: nowrap;
+  color: #fff;
+  background: rgba(26, 23, 19, 0.7);
+  border-radius: 999px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.wallet__bill:hover .bill__luck {
+  opacity: 1;
+}
+
+/* Paper grain on the wallet and the paper cards (not on the metal card) */
+.wallet__back::after,
+.wallet__pocket::after,
+.wallet__flap::after,
+.wcard--id::after,
+.wcard--paper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--paper) 0 0 / var(--paper-size) repeat;
+  pointer-events: none;
+}
+
+/* The cards: credit-card size, 10px corners */
+.wcard {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* ID card: only the name ever shows */
+.wcard--id {
+  padding: 12px 18px;
+  color: #26364a;
+  background: linear-gradient(135deg, #e3edf6, #c7d9eb);
+  font-family: 'DM Mono', ui-monospace, monospace;
+}
+
+.wcard-id__label {
+  margin: 0 0 6px;
+  font-size: 7.5px;
+  letter-spacing: 0.14em;
+  opacity: 0.7;
+}
+
+.wcard-id__name {
+  margin: 0;
+  font: 500 19px/1 'DM Mono', ui-monospace, monospace;
+  letter-spacing: 0.04em;
+}
+
+.wcard-id__role {
+  margin: 4px 0 0;
+  font-size: 10px;
+}
+
+.wcard-id__chip {
+  position: absolute;
+  left: 18px;
+  top: 100px;
+  width: 42px;
+  height: 32px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #d9c27a, #f5e3a3, #b8964a);
+}
+
+.wcard-id__code {
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
+  width: 120px;
+  height: 26px;
+  background: repeating-linear-gradient(90deg, #26364a 0 2px, transparent 2px 4px, #26364a 4px 5px, transparent 5px 8px);
+  opacity: 0.6;
+}
+
+/* Paper business card */
+.wcard--paper {
+  padding: 18px 20px;
+  color: #1a1713;
+  background: #f4f0e6;
+  font: 11px/1.5 'DM Mono', ui-monospace, monospace;
+}
+
+.wcard-paper__name {
+  margin: 0;
+  font: italic 22px/1 Fraunces, Georgia, serif;
+}
+
+.wcard-paper__role {
+  margin: 4px 0 18px;
+  color: #8a8a8d;
+}
+
+.wcard--paper ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 7px;
+}
+
+.wcard--paper li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wcard--paper a {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(26, 23, 19, 0.3);
+}
+
+.wcard--paper a:hover {
+  color: #f67522;
+  border-color: #f67522;
+}
+
+.wcard--paper li button {
+  padding: 1px 8px;
+  font: 10px/1.5 'DM Mono', ui-monospace, monospace;
+  color: #1a1713;
+  background: transparent;
+  border: 1px solid #1a1713 !important;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.wcard--paper li button:hover {
+  color: #fff !important;
+  background: #1a1713;
+}
+
+.wcard-paper__city {
+  color: #8a8a8d;
+}
+
+/* Gold NFC card: front and back */
+.wcard-flip {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.wcard-face {
+  backface-visibility: hidden;
+}
+
+.wcard-face--back {
+  transform: rotateY(180deg);
+}
+
+.wcard--gold {
+  color: rgba(92, 62, 14, 0.85);
+  background:
+    radial-gradient(circle at var(--sheen, 50%) 30%, rgba(255, 250, 225, 0.55), transparent 45%),
+    linear-gradient(125deg, #a97b26 0%, #f0cf78 22%, #c4943a 42%, #f6dd98 62%, #b08332 82%, #e8c46c 100%);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.18),
+    inset 0 0 0 1px rgba(255, 240, 200, 0.5);
+}
+
+/* Engraved: dark letters with a light edge underneath */
+.wcard-gold__quote,
+.wcard-gold__email {
+  margin: 0;
+  font-family: 'DM Mono', ui-monospace, monospace;
+  text-shadow: 0 0.6px 0 rgba(255, 244, 210, 0.7);
+}
+
+.wcard-gold__quote {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 12px;
+  font-size: 6.1px;
+  line-height: 1.5;
+  text-align: justify;
+}
+
+.wcard-gold__name {
+  position: absolute;
+  left: 36px;
+  top: 50px;
+  height: 138px;
+  width: auto;
+  /* golden ink pressed into the metal, cut off on the right like the card */
+  filter: invert(27%) sepia(52%) saturate(600%) hue-rotate(5deg) brightness(70%);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.wcard-gold__email {
+  position: absolute;
+  bottom: 11px;
+  font-size: 7.5px;
+}
+
+.wcard-gold__email {
+  left: 16px;
+}
+
+
+.wcard-gold__hint {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  padding: 2px 8px;
+  font: 9px/1.5 'DM Mono', ui-monospace, monospace;
+  color: #fff;
+  background: rgba(26, 23, 19, 0.6);
+  border-radius: 999px;
+  animation: fold-nudge 1.6s ease-in-out infinite;
+}
+
+.wcard-gold__nfc {
+  position: absolute;
+  left: 18px;
+  top: 14px;
+  font: 500 14px/1 'DM Mono', ui-monospace, monospace;
+  letter-spacing: -0.15em;
+  transform: rotate(-90deg) translateX(-12px);
+}
+
+.wcard-gold__quote-btn {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 12px;
+  font: italic 26px/1.15 Fraunces, Georgia, serif;
+  color: rgba(92, 62, 14, 0.9);
+  text-shadow: 0 1px 0 rgba(255, 244, 210, 0.7);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.wcard-gold__quote-btn:hover {
+  color: #8c162c;
+}
+
+/* ---------- Quote request (temporary styling) ---------- */
+
+.quote-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(5px);
+}
+
+.quote-letter {
+  position: relative;
+  width: min(520px, 100%);
+  padding: 32px 32px 28px;
+  background: #f6f3ea;
+  border-top: 10px solid #f67522;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+}
+
+.quote-letter h2 {
+  margin: 0 0 4px;
+  font-size: 30px;
+  font-style: italic;
+  font-weight: normal;
+}
+
+.quote-intro {
+  margin: 0 0 20px;
+  color: #555;
+}
+
+.quote-letter form {
+  display: grid;
+  gap: 14px;
+}
+
+.quote-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.quote-letter label,
+.quote-letter fieldset {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.quote-letter label > span,
+.quote-letter legend {
+  padding: 0;
+  font: 11px/1 'Oswald', 'Arial Narrow', sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #333;
+}
+
+.quote-letter legend {
+  margin-bottom: 6px;
+}
+
+.quote-letter input,
+.quote-letter select,
+.quote-letter textarea {
+  width: 100%;
+  padding: 8px 2px;
+  font: 16px/1.4 Georgia, 'Times New Roman', serif;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #1d1d1f;
+  border-radius: 0;
+  outline: none;
+}
+
+.quote-letter textarea {
+  resize: vertical;
+  border: 1px solid #1d1d1f;
+  padding: 8px;
+}
+
+.quote-letter input:focus,
+.quote-letter select:focus,
+.quote-letter textarea:focus {
+  border-color: #f67522;
+  box-shadow: 0 1px 0 #f67522;
+}
+
+.quote-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quote-chip {
+  padding: 6px 12px;
+  font: 14px Georgia, 'Times New Roman', serif;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 150ms, color 150ms;
+}
+
+.quote-chip[aria-pressed='true'] {
+  color: #fff;
+  background: #f67522;
+  border-color: #f67522;
+}
+
+.quote-send {
+  justify-self: start;
+  margin-top: 6px;
+  padding: 10px 22px;
+  font: 13px/1 'Oswald', 'Arial Narrow', sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--ink);
+  border: 0;
+  cursor: pointer;
+}
+
+/* Hidden spam trap (bots fill it in, people never see it) */
+.quote-trap {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.quote-consent {
+  margin: 4px 0 0;
+  font: 11px/1.5 'DM Mono', ui-monospace, monospace;
+  color: rgba(26, 23, 19, 0.65);
+}
+.quote-consent button {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--ink);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.quote-consent button:hover {
+  color: #f67522;
+}
+
+.quote-send:hover {
+  background: #f67522;
+}
+
+.quote-send:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.quote-close {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  font-size: 26px;
+  line-height: 1;
+  color: var(--ink);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.quote-error {
+  margin: 0;
+  color: #8c162c;
+}
+
+.quote-done p {
+  margin: 8px 0 18px;
+}
+
+@media (max-width: 520px) {
+  .quote-letter {
+    padding: 28px 20px 22px;
+  }
+
+  .quote-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Temporary placeholder dialog ---------- */
+
+.placeholder-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.placeholder-card {
+  width: min(360px, 100%);
+  padding: 24px;
+  background: #f3f1ea;
+  border-top: 8px solid var(--ink);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+}
+
+.placeholder-card h2 {
+  margin: 0 0 8px;
+  font-style: italic;
+  font-weight: normal;
+}
+
+.placeholder-kicker {
+  margin: 0 0 4px;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+}
+
+.placeholder-card button {
+  margin-top: 12px;
+  padding: 8px 16px;
+  font: inherit;
+  background: var(--ink);
+  color: #fff;
+  border: 0;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home--touch .shelf-item {
+    transition: none;
+  }
+}
+
+/* ---------- Movie picks: a DVD case with the review and the disc ---------- */
+
+.binder.is-dvd .book3d__pages {
+  display: none;
+}
+
+.binder.is-dvd .b3__page {
+  cursor: default;
+  overflow: hidden;
+}
+
+/* The inside, drawn at the case's real proportions and scaled to fit */
+.dvd-face {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  background:
+    radial-gradient(120% 80% at 30% 10%, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0) 60%),
+    #232326;
+  box-shadow: inset 0 0 0 10px #2b2b2f, inset 0 0 0 11px rgba(0, 0, 0, 0.5);
+}
+
+/* Clear plastic tabs that hold the review card in the cover */
+.dvd-clip {
+  position: absolute;
+  left: 50%;
+  width: 120px;
+  height: 22px;
+  margin-left: -60px;
+  z-index: 2;
+  border-radius: 4px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.08));
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+.dvd-clip--top {
+  top: 26px;
+}
+.dvd-clip--bottom {
+  bottom: 26px;
+}
+
+.dvd-insert {
+  position: absolute;
+  inset: 34px 30px;
+  display: flex;
+  flex-direction: column;
+  padding: 44px 40px 36px;
+  background: #f4efe4;
+  color: #1a1713;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.dvd-insert__kicker {
+  margin: 0 0 18px;
+  font: 500 13px 'DM Mono', monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #F67522;
+}
+
+.dvd-insert__title {
+  margin: 0;
+  font: italic 400 50px / 1 Fraunces, Georgia, serif;
+}
+
+.dvd-insert__meta {
+  margin: 12px 0 0;
+  font: 400 13px / 1.4 'DM Mono', monospace;
+  color: #6b655c;
+}
+
+.dvd-rating {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin: 18px 0 22px;
+  font-size: 26px;
+  line-height: 1;
+}
+
+/* A star filled from the left by --fill (100% / 50% / 0%) */
+.dvd-star {
+  color: transparent;
+  background: linear-gradient(90deg, #F67522 var(--fill), #d8d1c4 var(--fill));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.dvd-heart {
+  margin-left: 10px;
+  color: #F67522;
+}
+
+.dvd-insert__review {
+  flex: 1;
+  font: 400 21px / 1.45 Newsreader, Georgia, serif;
+}
+.dvd-insert__review p {
+  margin: 0 0 0.8em;
+}
+.dvd-insert.is-long .dvd-insert__review {
+  font-size: 18px;
+}
+
+.dvd-insert__link {
+  align-self: flex-start;
+  font: 500 13px 'DM Mono', monospace;
+  letter-spacing: 0.04em;
+  color: #1a1713;
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+}
+.dvd-insert__link:hover {
+  color: #F67522;
+}
+
+/* Right side: the moulded tray and the disc */
+.dvd-tray {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 500px;
+  height: 500px;
+  margin: -250px 0 0 -250px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #1c1c1f 0 60%, #262629 60.5% 100%);
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.6);
+}
+
+.dvd-disc {
+  position: absolute;
+  inset: 12px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  background: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  /* the hole in the middle */
+  -webkit-mask: radial-gradient(circle, transparent 7.5%, #000 7.8%);
+  mask: radial-gradient(circle, transparent 7.5%, #000 7.8%);
+  transition: transform 0.4s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+.dvd-disc:hover,
+.dvd-disc.is-spinning {
+  transform: translateY(-4px) scale(1.01);
+}
+.dvd-disc:focus-visible {
+  outline: 2px solid #F67522;
+  outline-offset: 4px;
+}
+
+.dvd-disc__print {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #444 center 30% / cover no-repeat;
+}
+
+/* Rainbow light on the shiny side */
+.dvd-disc__sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    conic-gradient(from 20deg, rgba(255, 80, 80, 0.35), rgba(255, 220, 90, 0.3), rgba(90, 255, 160, 0.3), rgba(90, 170, 255, 0.35), rgba(220, 110, 255, 0.3), rgba(255, 80, 80, 0.35)),
+    linear-gradient(125deg, rgba(255, 255, 255, 0) 35%, rgba(255, 255, 255, 0.45) 48%, rgba(255, 255, 255, 0) 60%);
+  mix-blend-mode: soft-light;
+}
+
+/* The clear inner ring around the hole */
+.dvd-disc__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(220, 222, 228, 0.85) 0 15%, rgba(160, 162, 170, 0.9) 15.4% 16.4%, rgba(0, 0, 0, 0) 16.8%);
+}
+
+/* The rosette clip that holds the disc */
+.dvd-hub {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 70px;
+  height: 70px;
+  margin: -35px 0 0 -35px;
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle, #1c1c1f 0 22%, rgba(0, 0, 0, 0) 23%),
+    repeating-conic-gradient(#3a3a3f 0 10deg, #2a2a2e 10deg 20deg);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.dvd-emboss {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 40px;
+  margin: 0;
+  text-align: center;
+  font: 600 14px Oswald, sans-serif;
+  letter-spacing: 0.4em;
+  color: #2f2f33;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.05), 0 -1px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* Phones: one side only, the disc above and the review card below */
+.dvd-face--right.is-phone .dvd-tray {
+  top: 34px;
+  width: 330px;
+  height: 330px;
+  margin: 0 0 0 -165px;
+}
+.dvd-face--right.is-phone .dvd-hub {
+  width: 48px;
+  height: 48px;
+  margin: -24px 0 0 -24px;
+}
+.dvd-insert.is-compact {
+  inset: 384px 24px 24px;
+  padding: 26px 28px 22px;
+}
+.dvd-insert.is-compact .dvd-insert__kicker {
+  margin-bottom: 8px;
+}
+.dvd-insert.is-compact .dvd-insert__title {
+  font-size: 34px;
+}
+.dvd-insert.is-compact .dvd-rating {
+  margin: 10px 0 12px;
+  font-size: 20px;
+}
+.dvd-insert.is-compact .dvd-insert__review {
+  font-size: 16px;
+  line-height: 1.38;
+}
+.dvd-insert.is-compact.is-long .dvd-insert__review {
+  font-size: 13.5px;
+}
+
+/* ---------- Book picks: real books with their own covers ---------- */
+
+/* The fold line near the spine of a paperback cover */
+.crease {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.18), rgba(255, 255, 255, 0.12) 2.2%, rgba(0, 0, 0, 0.1) 3.4%, rgba(0, 0, 0, 0) 6%);
+}
+
+.binder.is-pick .b3__page {
+  cursor: default;
+  overflow: hidden;
+}
+
+.pick-page {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  display: flex;
+  flex-direction: column;
+  padding: 64px 56px 48px;
+  color: #1a1713;
+  background: #f6f1e6;
+}
+/* the shadow of the gutter in the middle of the open book */
+.pick-page--left {
+  background: linear-gradient(270deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0) 9%), #f6f1e6;
+}
+.pick-page--right {
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0) 9%), #f6f1e6;
+}
+
+.pick-page__kicker {
+  margin: 0 0 18px;
+  font: 500 13px 'DM Mono', monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #F67522;
+}
+
+.pick-page__title {
+  margin: 0;
+  font: italic 400 42px / 1.05 Fraunces, Georgia, serif;
+}
+
+.pick-page__meta {
+  margin: 12px 0 26px;
+  font: 400 13px / 1.4 'DM Mono', monospace;
+  color: #6b655c;
+}
+
+.pick-page__synopsis {
+  flex: 1;
+  margin: 0;
+  font: 400 21px / 1.45 Newsreader, Georgia, serif;
+}
+
+.pick-page__buy {
+  align-self: flex-start;
+  padding: 11px 18px;
+  border-radius: 999px;
+  background: #1a1713;
+  color: #f6f1e6;
+  font: 500 13px 'DM Mono', monospace;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.pick-page__buy:hover,
+.pick-page__buy:focus-visible {
+  background: #F67522;
+}
+
+.pick-page__disclosure {
+  margin: 12px 0 0;
+  font: 400 10.5px / 1.4 'DM Mono', monospace;
+  color: #8d867b;
+}
+
+/* Square and landscape books: everything a bit smaller */
+.pick-page.is-short {
+  padding: 36px 44px 28px;
+}
+.pick-page.is-short .pick-page__kicker {
+  margin-bottom: 8px;
+}
+.pick-page.is-short .pick-page__title {
+  font-size: 30px;
+}
+.pick-page.is-short .pick-page__meta {
+  margin: 8px 0 12px;
+}
+.pick-page.is-short .pick-page__synopsis {
+  font-size: 16px;
+  line-height: 1.38;
+}
+.pick-page.is-short .pick-page__buy {
+  padding: 8px 14px;
+  font-size: 12px;
+}
+.pick-page.is-short .pick-page__disclosure {
+  margin-top: 6px;
+}
+
+/* Title page */
+.pick-title {
+  margin: auto 0;
+  text-align: center;
+}
+.pick-title__name {
+  margin: 0;
+  font: italic 400 44px / 1.1 Fraunces, Georgia, serif;
+}
+.pick-title__rule {
+  display: block;
+  width: 48px;
+  height: 1px;
+  margin: 26px auto;
+  background: #1a1713;
+}
+.pick-title__author {
+  margin: 0;
+  font: 400 14px 'DM Mono', monospace;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.pick-page.is-short .pick-title__name {
+  font-size: 32px;
+}
+.pick-page.is-short .pick-title__rule {
+  margin: 14px auto;
+}
+
+/* Her ex libris stamp, a little crooked like a real one */
+.pick-stamp {
+  position: absolute;
+  right: 48px;
+  bottom: 44px;
+  margin: 0;
+  padding: 10px 16px 8px;
+  border: 2px solid #F67522;
+  border-radius: 6px;
+  color: #F67522;
+  font: italic 400 26px / 1 Fraunces, Georgia, serif;
+  text-align: center;
+  rotate: -7deg;
+  opacity: 0.85;
+  mix-blend-mode: multiply;
+}
+.pick-stamp span {
+  display: block;
+  margin-bottom: 4px;
+  font: 500 10px 'DM Mono', monospace;
+  font-style: normal;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.pick-page.is-short .pick-stamp {
+  right: 30px;
+  bottom: 22px;
+  scale: 0.75;
+}
+.pick-stamp.is-small {
+  top: 40px;
+  right: 34px;
+  bottom: auto;
+  scale: 0.7;
+}
