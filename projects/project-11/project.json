@@ -1,41 +1,16 @@
 {
-  "hidden": true,
   "number": "11",
-  "title": "Project Title 11",
-  "year": "2024",
+  "title": "SOTAVENTO",
+  "year": "2025",
+  "category": "identities",
   "shelfBook": "book-08-02-yellow",
   "color": "yellow",
   "spine": {
-    "title": "PROJECT TITLE 11"
+    "title": "SOTAVENTO",
+    "color": "#fff"
   },
-  "description": {
-    "en": "Write a short description of the project here: what it is, who it was for and what you did. This text is read from the database, so it can change per book without touching the layout.",
-    "es": "Escribe aquí una descripción breve del proyecto. Este texto también viene de la base de datos y se muestra en un gris más claro como segundo idioma."
-  },
-  "story": "Add the story of this project here: context, process, decisions and outcomes. Each page is filled from the book entry in the database, so nothing is typed by hand on the page itself. Add the story of this project here: context, process, decisions and outcomes. Each page is filled from the book entry in the database, so nothing is typed by hand on the page itself. Add the story of this project here: context, process, decisions and outcomes. Each page is filled from the book entry in the database, so nothing is typed by hand on the page itself. Add the story of this project here: context, process, decisions and outcomes. Each page is filled from the book entry in the database, so nothing is typed by hand on the page itself. Add the story of this project here: context, process, decisions and outcomes. Each page is filled from the book entry in the database, so nothing is typed by hand on the page itself. Add the story of this project here: context, process, decisions and outcomes. Each page is filled from the book entry in the database, so nothing is typed by hand on the page itself. Add the story of this project here: context, process, decisions and outcomes. Each page is filled from the book entry in the database, so nothing is typed by hand on the page itself. Add the story of this project here: context, process, decisions and outcomes. Each page is filled from the book entry in the database, so nothing is typed by hand on the page itself. Add the story of this project here: context, process, decisions and outcomes. Each page is filled from the book entry in the database, so nothing is typed by hand on the page itself. Add the story of this project here: context, process, decisions and outcomes. Each page is filled from the book entry in the database, so nothing is typed by hand on the page itself. Add the story of this project here: context, process, decisions and outcomes. Each page is filled from the book entry in the database, so nothing is typed by hand on the page itself. Add the story of this project here: context, process, decisions and outcomes. Each page is filled from the book entry in the database, so nothing is typed by hand on the page itself.",
-  "pages": [
-    {
-      "layout": "full",
-      "image": "01.jpg",
-      "caption": "Caption 02"
-    },
-    {
-      "layout": "framed",
-      "image": "02.jpg",
-      "caption": "Caption 03"
-    },
-    {
-      "layout": "pair",
-      "images": [
-        "03.jpg",
-        "04.jpg"
-      ],
-      "caption": "Caption 04"
-    },
-    {
-      "layout": "framed",
-      "image": "05.jpg",
-      "caption": "Caption 05"
-    }
-  ]
+  "cover": {
+    "blend": "screen",
+    "opacity": 1
+  }
 }
