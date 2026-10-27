@@ -47,12 +47,26 @@ export const Shelf = memo(function Shelf({ shelf }) {
     // Load the spine font first so the titles are measured at their real width
     // (the browser wouldn't fetch it until some text actually uses it).
     let alive = true;
+    const draw = () => {
+      if (!alive) return;
+      // Measured with a stand-in font, titles come out too thick and too
+      // short — so if Oswald wasn't ready yet, measure them again once it is.
+      root.querySelectorAll('.spine-text').forEach((t) => t.remove());
+      addSpineTitles(root);
+    };
     document.fonts
       .load('600 10px Oswald')
       .catch(() => {})
-      .then(() => alive && addSpineTitles(root));
+      .then(() => {
+        const ready = document.fonts.check('600 10px Oswald');
+        draw();
+        if (!ready) document.fonts.ready.then(draw);
+      });
+    // Also when any font finishes loading late (slow phone connections).
+    document.fonts.addEventListener?.('loadingdone', draw);
     return () => {
       alive = false;
+      document.fonts.removeEventListener?.('loadingdone', draw);
     };
   }, []);
 

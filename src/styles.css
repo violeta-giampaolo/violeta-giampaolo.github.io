@@ -276,6 +276,23 @@ body {
   filter: none !important;
 }
 
+/* A book with a title fades as one piece. Fading the book and its title
+   separately let the faded book show through the letters, so the white
+   titles looked tinted in the book's colour. */
+.shelf-pop:has(> .spine-text) {
+  opacity: calc(var(--idle-opacity) + (1 - var(--idle-opacity)) * var(--glow, 0));
+}
+.shelf-pop:has(> .spine-text) > .shelf-item {
+  opacity: 1;
+}
+.shelf-pop:has(> .spine-text.is-swept),
+.shelf-pop:has(> .shelf-item:focus-visible) {
+  opacity: 1;
+}
+.home--touch .shelf-pop:has(> .spine-text) {
+  transition: opacity var(--light-speed) ease;
+}
+
 /* ---------- Desktop layout ---------- */
 
 /* The homepage never scrolls: it always rests on the bookshelf, centred.
