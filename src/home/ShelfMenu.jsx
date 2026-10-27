@@ -30,6 +30,11 @@ export function ShelfMenu({ active, onPick, width, className = '', style }) {
         size *= width / natural;
       }
       el.style.fontSize = `${size}px`;
+      // Safety net: never wider than the shelf (rounding, font fallbacks…)
+      for (let i = 0; i < 20 && el.scrollWidth > width; i++) {
+        size *= 0.99;
+        el.style.fontSize = `${size}px`;
+      }
     };
     fit();
     document.fonts.load(`400 ${BASE}px "DM Mono"`).then(fit, fit);

@@ -12,6 +12,10 @@
 html {
   /* Keep room for the scrollbar so the width never jumps */
   scrollbar-gutter: stable;
+  /* iPhone Safari enlarges small text on its own, after the menu was sized
+     to fit the shelf (it ran off both edges) — keep text at its set size */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 html,
@@ -70,6 +74,7 @@ body {
 
 .shelf-menu--phone {
   margin: 0 0 10px;
+  width: max-content; /* measured by its text, never the screen */
 }
 
 .shelf-menu__item {
@@ -1111,16 +1116,18 @@ body {
 /* ---------- Sound toggle (temporary styling) ---------- */
 
 /* Top-left controls: menu + mute (above the page, below open windows) */
+/* In the page's top-left corner: they scroll away with the page */
 .site-controls {
-  position: fixed;
-  top: 16px;
-  left: 16px;
+  position: absolute;
+  top: 12px;
+  left: 10px;
   z-index: 8;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 2px;
 }
 
+/* Just the icon, no circle */
 .icon-btn {
   display: grid;
   place-items: center;
@@ -1128,15 +1135,15 @@ body {
   height: 38px;
   padding: 0;
   color: var(--ink);
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid var(--ink);
-  border-radius: 999px;
+  background: none;
+  border: 0;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: color 0.2s;
 }
 .icon-btn:hover,
 .icon-btn:focus-visible {
-  background: #fff;
+  color: #f67522;
 }
 .icon-btn svg {
   width: 20px;
