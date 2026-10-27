@@ -1,5 +1,9 @@
 import { useLayoutEffect, useRef } from 'react';
-import { categories } from '../content/shelfLinks.js';
+import { categories, shelfLinks } from '../content/shelfLinks.js';
+import { projects } from '../content/projects.js';
+
+// Only categories with something in them (e.g. 'spaces' appears once it has a project).
+const shown = categories.filter((c) => projects.some((p) => p.category === c) || shelfLinks.some((l) => l.category === c));
 import { sfx } from '../sound/sfx.js';
 
 const BASE = 11; // px the menu is measured at
@@ -37,7 +41,7 @@ export function ShelfMenu({ active, onPick, width, className = '', style }) {
 
   return (
     <nav ref={ref} className={`shelf-menu ${className}`} aria-label="Filter the shelf" style={style}>
-      {categories.map((c, i) => (
+      {shown.map((c, i) => (
         <span key={c} className="shelf-menu__item">
           {i > 0 && <span className="shelf-menu__rule" aria-hidden="true" />}
           <button
