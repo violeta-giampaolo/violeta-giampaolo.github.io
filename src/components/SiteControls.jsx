@@ -33,7 +33,8 @@ function SpeakerIcon({ on }) {
   );
 }
 
-export function SiteControls({ onOpen }) {
+// `onHome`: on a category page, the menu also offers the way back to the bookshelf.
+export function SiteControls({ onOpen, onHome }) {
   const [on, setOn] = useState(sfx.isOn());
   const [menu, setMenu] = useState(false);
   const root = useRef(null);
@@ -89,6 +90,17 @@ export function SiteControls({ onOpen }) {
             exit={{ opacity: 0, x: -8 }}
             transition={{ duration: 0.18 }}
           >
+            {onHome && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMenu(false);
+                  onHome();
+                }}
+              >
+                home
+              </button>
+            )}
             {LINKS.map((l) => (
               <button
                 key={l.link}

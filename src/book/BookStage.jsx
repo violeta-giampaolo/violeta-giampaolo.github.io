@@ -52,8 +52,32 @@ function depthRatioOf(key) {
   return f ? Math.min(0.22, Math.max(0.05, f.thickness / f.length)) : 0.1;
 }
 
-// The pose that puts the 3D book exactly over its spine on the shelf.
+// The book standing on a category page, if that's where it's opening from.
+const categoryBook = (key) => document.querySelector(`.cat-book[data-book="${CSS.escape(key)}"]`);
+
+// On a category page the spines are drawn thicker than on the home shelf;
+// the 3D book takes the same thickness, so it lifts off without a jump.
+function categorySpineRatio(key) {
+  const el = categoryBook(key);
+  if (el?.dataset.view !== 'spine') return null;
+  return el.offsetWidth / el.offsetHeight;
+}
+
+// The pose that puts the 3D book exactly over its spine on the shelf
+// (or over its cover, on the phone's category page).
 function shelfPose(key, H) {
+  const book = categoryBook(key);
+  if (book) {
+    const r = book.getBoundingClientRect();
+    return {
+      px: r.left + r.width / 2,
+      py: r.top + r.height / 2,
+      rz: 0,
+      s: r.height / H,
+      ry: book.dataset.view === 'cover' ? 0 : 90,
+      rx: 0,
+    };
+  }
   const el = shelfItem(key);
   const f = el && bookFrame(el, (shape) => shape.getScreenCTM());
   if (!f) return null;
@@ -132,6 +156,7 @@ function bookPick(p, H) {
   const h = H * Math.min(1, COVER_RATIO / a);
   return { W: h * a, H: h, D: h * (p.thickness ?? 0.1) };
 }
+const heightOf = (p, H) => (p?.type === 'book' ? bookPick(p, H).H : H);
 
 // Book size: about two thirds of the screen height, narrower on phones.
 const bookHeight = (vp) => Math.min(vp.h * 0.68, (vp.w * 0.62) / COVER_RATIO);
@@ -148,7 +173,7 @@ export function BookStage({ startKey, category, onClosed }) {
   // Take off from the exact spot of the book on the shelf.
   const [fly, setFly] = useState(() => ({
     slug: catalogue[index]?.slug,
-    from: shelfPose(startKey, bookHeight(viewport())),
+    from: shelfPose(startKey, heightOf(catalogue[index], bookHeight(viewport()))),
     dir: 'in',
   }));
   const overlay = useRef(null);
@@ -164,22 +189,29 @@ export function BookStage({ startKey, category, onClosed }) {
   const H = bookHeight(vp);
   const W = H * COVER_RATIO;
   const depths = useMemo(() => Object.fromEntries(catalogue.map((p) => [p.slug, depthRatioOf(p.shelfBook)])), [catalogue]);
+  const spineRatios = useMemo(
+    () => Object.fromEntries(catalogue.map((p) => [p.slug, categorySpineRatio(p.shelfBook)])),
+    [catalogue],
+  );
   const size = useMemo(
     () => ({
       vw: vp.w,
       vh: vp.h,
       W,
       // Magazines keep their PDF's page shape and are only a few sheets thick.
-      book: (p) =>
-        p.type === 'magazine'
-          ? { W: H * p.pageAspect, H, D: H * 0.016 }
-          : p.type === 'dvd'
+      book: (p) => {
+        if (p.type === 'magazine') return { W: H * p.pageAspect, H, D: H * 0.016 };
+        const base =
+          p.type === 'dvd'
             ? { W: H * (135 / 190), H, D: H * (14 / 190) } // a DVD case: 135 × 190 × 14 mm
             : p.type === 'book'
               ? bookPick(p, H)
-              : { W, H, D: H * depths[p.slug] },
+              : { W, H, D: H * depths[p.slug] };
+        const ratio = spineRatios[p.slug];
+        return ratio ? { ...base, D: base.H * ratio } : base;
+      },
     }),
-    [vp, W, H, depths],
+    [vp, W, H, depths, spineRatios],
   );
   const center = useMemo(() => ({ px: vp.w / 2, py: vp.h * 0.48, rz: 0, s: 1, ry: TURN, rx: TIP }), [vp]);
 
@@ -205,7 +237,7 @@ export function BookStage({ startKey, category, onClosed }) {
     if (phase !== 'shown') return;
     setPhase('out');
     sfx.whoosh(true);
-    setFly({ slug: current.slug, from: shelfPose(current.shelfBook, H), dir: 'out' });
+    setFly({ slug: current.slug, from: shelfPose(current.shelfBook, heightOf(current, H)), dir: 'out' });
   }, [phase, current, H]);
 
   // The first spread starts loading as soon as a book is presented.

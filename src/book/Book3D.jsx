@@ -70,6 +70,35 @@ function RunningSpineTitle({ text, color }) {
   );
 }
 
+// What's printed on a project's cover. Used by the 3D book and the phone shelf.
+export function CoverArt({ project }) {
+  const cover = project.cover ?? {};
+  return (
+    <>
+      {project.type === 'magazine' && project.pdfPages?.[0] ? (
+        // A magazine's cover is the first page of its PDF, with a gloss.
+        <>
+          <img className="book3d__texture" src={project.pdfPages[0]} alt="" draggable="false" />
+          <span className="gloss" />
+        </>
+      ) : (
+        project.texture && (
+          <img
+            className="book3d__texture"
+            src={project.texture}
+            alt=""
+            draggable="false"
+            style={{ mixBlendMode: cover.blend ?? 'overlay', opacity: cover.opacity ?? 1 }}
+          />
+        )
+      )}
+      {/* the poster sits under the case's clear plastic sleeve */}
+      {project.type === 'dvd' && <span className="gloss" />}
+      {project.type === 'book' && <span className="crease" />}
+    </>
+  );
+}
+
 // A project as a real 3D book (cover, spine, top edge with pages).
 // `progress` goes 0 → 1 from pose `from` to pose `to`; it may overshoot
 // past 1 with a spring, which makes the book settle with a little bounce.
@@ -101,7 +130,6 @@ export function Book3D({ project, size, from, to, progress, arc = 0, cameraLift 
   // the book turns, so the spine reads as a separate side of the 3D book.
   const spineColor = useTransform(progress, (t) => mixHex(color, shade(color), clamp01(t * 3)));
   const spineTitle = project.spine?.title ?? project.title ?? '';
-  const cover = project.cover ?? {};
 
   return (
     <motion.div className="book-persp" style={{ perspectiveOrigin }}>
@@ -138,26 +166,7 @@ export function Book3D({ project, size, from, to, progress, arc = 0, cameraLift 
         </motion.div>
         {/* Cover: the book's colour with the project's texture picture blended on top */}
         <div className="book3d__cover" style={{ background: color, transform: `translateZ(${D / 2}px)` }}>
-          {project.type === 'magazine' && project.pdfPages?.[0] ? (
-            // A magazine's cover is the first page of its PDF, with a gloss.
-            <>
-              <img className="book3d__texture" src={project.pdfPages[0]} alt="" draggable="false" />
-              <span className="gloss" />
-            </>
-          ) : (
-            project.texture && (
-              <img
-                className="book3d__texture"
-                src={project.texture}
-                alt=""
-                draggable="false"
-                style={{ mixBlendMode: cover.blend ?? 'overlay', opacity: cover.opacity ?? 1 }}
-              />
-            )
-          )}
-          {/* the poster sits under the case's clear plastic sleeve */}
-          {project.type === 'dvd' && <span className="gloss" />}
-          {project.type === 'book' && <span className="crease" />}
+          <CoverArt project={project} />
         </div>
       </motion.div>
     </motion.div>

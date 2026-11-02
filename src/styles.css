@@ -2756,3 +2756,188 @@ body {
   bottom: auto;
   scale: 0.7;
 }
+
+/* ---------- Category page: one category on a single shelf ---------- */
+
+/* Figma: the home page blurred behind a light scrim */
+.cat-page {
+  position: fixed;
+  inset: 0;
+  z-index: 5; /* over the home page, under the paper grain and the book stage */
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  --idle-opacity: 1; /* the books stay in full colour; hovering only pops them */
+}
+
+.cat-stage {
+  position: absolute;
+  width: 1440px;
+  height: 900px;
+  transform-origin: 0 0;
+}
+
+.cat-title {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.cat-title .site-title span {
+  cursor: pointer;
+}
+.cat-stage .cat-title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 99px;
+  text-align: center;
+}
+.cat-title .site-title {
+  font-size: 58px;
+  line-height: 63px;
+}
+
+/* The filter, centred under the title */
+.shelf-menu--category {
+  font-size: 11.5px;
+  color: #6f6f72;
+}
+.cat-stage .shelf-menu--category {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 180px;
+  justify-content: center;
+}
+
+/* Desktop: spines standing on the shelf */
+.cat-pop {
+  position: absolute;
+  transform-box: border-box;
+  transform-origin: 50% 100%; /* grows upwards, standing on the shelf */
+}
+
+.cat-book,
+.cat-object {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.cat-book {
+  position: relative;
+  overflow: hidden;
+}
+/* A band of book colour round the white title, so each spine keeps its shape
+   on this light page */
+.cat-book .book3d__spine-title {
+  left: 9%;
+  top: 7px;
+  width: 82%;
+  height: calc(100% - 14px);
+}
+.cat-pop > .shelf-item {
+  animation: cat-book-in 0.45s cubic-bezier(0.2, 1.3, 0.4, 1) backwards;
+  animation-delay: var(--enter);
+}
+.cat-book:focus-visible,
+.cat-object:focus-visible {
+  outline: 2px solid #f67522;
+  outline-offset: 2px;
+}
+.cat-object img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom;
+}
+@keyframes cat-book-in {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+}
+
+.cat-shelf {
+  position: absolute;
+  left: 45.5px;
+  top: 722.8px;
+  width: 1349px;
+  height: 35.3px;
+  background: #000;
+}
+
+/* Phone: covers in rows of three, the page scrolls */
+.cat-page--phone {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  text-align: center;
+}
+.cat-page--phone .cat-title {
+  margin-top: calc(115px * var(--s));
+}
+.cat-page--phone .site-title {
+  display: inline-block;
+  font-size: calc(58px * var(--s));
+  line-height: 1.09;
+}
+
+.shelf-menu--category-phone {
+  display: block; /* two centred lines, like the prototype */
+  margin: calc(16px * var(--s)) auto 0;
+  line-height: 1.25;
+  font-size: max(11px, calc(11.5px * var(--s)));
+}
+.shelf-menu--category-phone .shelf-menu__item {
+  display: inline-flex;
+}
+.shelf-menu__break {
+  display: none;
+}
+.shelf-menu--category-phone .shelf-menu__break {
+  display: block;
+}
+/* Bigger finger targets, same look */
+.shelf-menu--category-phone button {
+  padding: 4px 0;
+}
+.shelf-menu--category-phone .shelf-menu__rule {
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.cat-rows {
+  padding: calc(32px * var(--s)) 0 calc(60px * var(--s));
+}
+.cat-row {
+  margin-bottom: calc(32px * var(--s));
+}
+.cat-row__books {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: calc(40px * var(--s));
+}
+.cat-row__shelf {
+  display: block;
+  width: calc(430px * var(--s));
+  max-width: calc(100% - 24px);
+  height: calc(11.35px * var(--s));
+  margin: 0 auto;
+  background: #000;
+}
+.cat-pop--cover {
+  flex: none;
+  transform: none;
+}
+.cat-book--cover > * {
+  position: absolute;
+  inset: 0;
+}

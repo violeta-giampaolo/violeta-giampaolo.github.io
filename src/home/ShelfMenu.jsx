@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react';
+import { Fragment, useLayoutEffect, useRef } from 'react';
 import { categories, shelfLinks } from '../content/shelfLinks.js';
 import { projects } from '../content/projects.js';
 
@@ -16,6 +16,7 @@ export function ShelfMenu({ active, onPick, width, className = '', style }) {
   const ref = useRef(null);
 
   useLayoutEffect(() => {
+    if (!width) return; // no width: the text keeps its CSS size (category pages)
     const el = ref.current;
     let alive = true;
     const fit = () => {
@@ -47,8 +48,11 @@ export function ShelfMenu({ active, onPick, width, className = '', style }) {
   return (
     <nav ref={ref} className={`shelf-menu ${className}`} aria-label="Filter the shelf" style={style}>
       {shown.map((c, i) => (
-        <span key={c} className="shelf-menu__item">
-          {i > 0 && <span className="shelf-menu__rule" aria-hidden="true" />}
+        <Fragment key={c}>
+        {/* Phone category page: the second line starts here, like the prototype */}
+        {!width && c === 'side quests' && <span className="shelf-menu__break" />}
+        <span className="shelf-menu__item">
+          {i > 0 && width && <span className="shelf-menu__rule" aria-hidden="true" />}
           <button
             type="button"
             aria-pressed={active === c}
@@ -63,7 +67,10 @@ export function ShelfMenu({ active, onPick, width, className = '', style }) {
               {c}
             </span>
           </button>
+          {/* Category pages: the divider follows the word, so a wrapped line never starts with one */}
+          {!width && i < shown.length - 1 && <span className="shelf-menu__rule" aria-hidden="true" />}
         </span>
+        </Fragment>
       ))}
     </nav>
   );

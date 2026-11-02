@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useMediaQuery, useViewport } from '../hooks/useMediaQuery.js';
 import { useElasticEdges } from '../hooks/useElasticEdges.js';
@@ -51,7 +51,7 @@ function setClass(els, name, on) {
   els.forEach((el) => el.classList.toggle(name, on));
 }
 
-export function Home({ onOpen, onFilter, paused = false }) {
+export function Home({ onOpen, filter, onPick, paused = false }) {
   const rootRef = useRef(null);
   const isDesktop = useMediaQuery('(min-width: 900px) and (min-aspect-ratio: 1/1)');
   const canHover = useMediaQuery('(hover: hover) and (pointer: fine)');
@@ -121,8 +121,6 @@ export function Home({ onOpen, onFilter, paused = false }) {
 
   // Category filter: everything outside the chosen category turns light grey
   // and goes quiet. Clicking anywhere but a coloured item clears it.
-  const [filter, setFilter] = useState(null);
-  useEffect(() => onFilter?.(filter), [filter, onFilter]);
   useEffect(() => {
     const root = rootRef.current;
     for (const wrap of root.querySelectorAll('.shelf-pop')) {
@@ -153,7 +151,7 @@ export function Home({ onOpen, onFilter, paused = false }) {
       if (e.target.closest?.('.shelf-menu')) return;
       const key = keyFrom(e, '.is-interactive');
       if (key) onOpen(targets.get(key));
-      else if (filter && !keyFrom(e, '.shelf-item')) setFilter(null);
+      else if (filter && !keyFrom(e, '.shelf-item')) onPick(null);
     },
     onKeyDown: (e) => {
       const key = keyFrom(e, '.is-interactive');
@@ -177,7 +175,7 @@ export function Home({ onOpen, onFilter, paused = false }) {
             <img className="stage-bg" src={bgDrawingUrl} alt="" />
             <SilhouetteQuote drawing={bgDrawing} />
             <SiteTitle className="site-title--desktop" />
-            <ShelfMenu className="shelf-menu--desktop" width={SHELF_W} active={filter} onPick={setFilter} />
+            <ShelfMenu className="shelf-menu--desktop" width={SHELF_W} active={filter} onPick={onPick} />
             <div className="bookshelf bookshelf--grid">
               {shelves.map((shelf) => (
                 <Shelf key={shelf.no} shelf={shelf} />
@@ -195,7 +193,7 @@ export function Home({ onOpen, onFilter, paused = false }) {
       <div className="phone-title" style={{ width: SHELF_W * scale, height: PHONE_TOP * scale, '--s': scale }}>
         <SiteTitle className="site-title--phone" />
       </div>
-      <ShelfMenu className="shelf-menu--phone" width={SHELF_W * scale} active={filter} onPick={setFilter} />
+      <ShelfMenu className="shelf-menu--phone" width={SHELF_W * scale} active={filter} onPick={onPick} />
       <div
         className="phone-stack"
         style={{
