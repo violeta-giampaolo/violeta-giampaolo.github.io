@@ -2755,10 +2755,54 @@ body {
   inset: 0;
   z-index: 5; /* over the home page, under the paper grain and the book stage */
   overflow: hidden;
+  --idle-opacity: 1; /* the books stay in full colour; hovering only pops them */
+}
+/* The veil is its own layer. Coming in, it arrives first; going out, the books
+   leave first and then it lifts, so the shelf never ghosts over the sharp home page. */
+.cat-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
   background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  --idle-opacity: 1; /* the books stay in full colour; hovering only pops them */
+  animation: cat-veil-in 0.3s ease backwards;
+}
+.cat-page > * {
+  animation: cat-content-in 0.22s ease 0.1s backwards;
+}
+.cat-page--leaving {
+  pointer-events: none; /* already on its way out: clicks belong to the bookshelf */
+}
+.cat-page--leaving::before {
+  animation: cat-veil-out 0.32s ease 0.1s forwards;
+}
+.cat-page--leaving > * {
+  animation: cat-content-out 0.14s ease-out forwards;
+}
+@keyframes cat-veil-in {
+  from {
+    background: rgba(255, 255, 255, 0);
+    backdrop-filter: blur(0);
+    -webkit-backdrop-filter: blur(0);
+  }
+}
+@keyframes cat-veil-out {
+  to {
+    background: rgba(255, 255, 255, 0);
+    backdrop-filter: blur(0);
+    -webkit-backdrop-filter: blur(0);
+  }
+}
+@keyframes cat-content-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes cat-content-out {
+  to {
+    opacity: 0;
+  }
 }
 
 .cat-stage {
@@ -2996,7 +3040,10 @@ body {
 }
 
 /* Phone: covers in rows of three, the page scrolls */
-.cat-page--phone {
+.cat-page__scroll {
+  position: absolute;
+  z-index: 1; /* without this the phone's veil loses its blur */
+  inset: 0;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;

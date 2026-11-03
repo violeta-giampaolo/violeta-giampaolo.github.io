@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
 import { Home } from './home/Home.jsx';
 import { CategoryShelf } from './home/CategoryShelf.jsx';
 import { Placeholder } from './components/Placeholder.jsx';
@@ -28,6 +27,11 @@ export default function App() {
   const closeBook = useCallback(() => setBook(null), []);
   const [page, setPage] = useState(pageFromHash); // the category page that's open
   const [privacyOver, setPrivacyOver] = useState(false); // privacy note on top of the quote form
+
+  // Leaving a category page: it stays on screen until it has finished fading out.
+  const [lastPage, setLastPage] = useState(page);
+  if (page && page !== lastPage) setLastPage(page);
+  const shelf = page ?? lastPage;
 
   useEffect(() => {
     const onHash = () => setPage(pageFromHash());
@@ -74,11 +78,17 @@ export default function App() {
       <PaperTexture />
 
       <Home paused={!!book || !!open || !!page} onPick={goTo} onOpen={openTarget} />
-      <AnimatePresence>
-        {page && (
-          <CategoryShelf key="category" category={page} onPick={goTo} onHome={goHome} onOpen={openTarget} controls={controls} />
-        )}
-      </AnimatePresence>
+      {shelf && (
+        <CategoryShelf
+          category={shelf}
+          leaving={!page}
+          onLeft={() => setLastPage(null)}
+          onPick={goTo}
+          onHome={goHome}
+          onOpen={openTarget}
+          controls={controls}
+        />
+      )}
       {book && <BookStage startKey={book} category={page} onClosed={closeBook} />}
       {open?.link === 'quote' && (
         <QuoteForm onClose={() => setOpen(null)} onPrivacy={() => setPrivacyOver(true)} paused={privacyOver} />

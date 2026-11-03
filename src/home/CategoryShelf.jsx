@@ -199,7 +199,7 @@ function CoverRows({ items, onOpen, scale }) {
   );
 }
 
-export function CategoryShelf({ category, onPick, onHome, onOpen, controls }) {
+export function CategoryShelf({ category, leaving, onLeft, onPick, onHome, onOpen, controls }) {
   const isDesktop = useMediaQuery('(min-width: 900px) and (min-aspect-ratio: 1/1)');
   const canHover = useMediaQuery('(hover: hover) and (pointer: fine)');
   const { w, h } = useViewport();
@@ -250,17 +250,19 @@ export function CategoryShelf({ category, onPick, onHome, onOpen, controls }) {
     },
   };
 
+  // The page comes and goes in CSS (see .cat-page in styles.css). It's gone once
+  // the veil, the last thing to leave, has lifted.
+  const fade = {
+    onAnimationEnd: (e) => {
+      if (e.animationName === 'cat-veil-out') onLeft();
+    },
+  };
+  const leavingClass = leaving ? ' cat-page--leaving' : '';
+
   if (isDesktop) {
     const scale = Math.min(w / STAGE_W, h / STAGE_H);
     return (
-      <motion.div
-        className="cat-page"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-        {...outside}
-      >
+      <div className={`cat-page${leavingClass}`} {...fade} {...outside}>
         {controls}
         <div
           className="cat-stage"
@@ -275,30 +277,24 @@ export function CategoryShelf({ category, onPick, onHome, onOpen, controls }) {
           )}
           <span className="cat-solid cat-shelf" />
         </div>
-      </motion.div>
+      </div>
     );
   }
 
   const scale = Math.min(w / PHONE_W, 1.3);
   return (
-    <motion.div
-      ref={scroller}
-      className="cat-page cat-page--phone"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
-      style={{ '--s': scale }}
-      {...outside}
-    >
-      {controls}
-      {title}
-      <ShelfMenu className="shelf-menu--category shelf-menu--category-phone" active={category} onPick={onPick} />
-      {behind ? (
-        <BehindRows onOpen={onOpen} canHover={canHover} scale={scale} />
-      ) : (
-        <CoverRows key={category} items={items} onOpen={onOpen} scale={scale} />
-      )}
-    </motion.div>
+    <div className={`cat-page cat-page--phone${leavingClass}`} style={{ '--s': scale }} {...fade} {...outside}>
+      {/* Only the content scrolls: the veil's blur doesn't work inside a scrolling box */}
+      <div ref={scroller} className="cat-page__scroll">
+        {controls}
+        {title}
+        <ShelfMenu className="shelf-menu--category shelf-menu--category-phone" active={category} onPick={onPick} />
+        {behind ? (
+          <BehindRows onOpen={onOpen} canHover={canHover} scale={scale} />
+        ) : (
+          <CoverRows key={category} items={items} onOpen={onOpen} scale={scale} />
+        )}
+      </div>
+    </div>
   );
 }
