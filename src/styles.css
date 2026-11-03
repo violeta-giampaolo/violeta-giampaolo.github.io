@@ -117,16 +117,6 @@ body {
   outline: none;
 }
 
-/* Filtered out: light grey, quiet */
-.shelf-pop.is-dimmed :is(path, rect, polygon, circle, ellipse, text) {
-  fill: #dddde0 !important;
-  transition: fill 350ms ease;
-}
-
-.shelf-pop.is-dimmed .shelf-item {
-  cursor: default;
-}
-
 .shelf-pop :is(path, rect, polygon, circle, ellipse, text) {
   transition: fill 350ms ease;
 }
@@ -244,7 +234,7 @@ body {
 .shelf-pop {
   transform-box: fill-box;
   transform-origin: center;
-  transform: scale(calc(1 + 0.03 * var(--glow, 0) + 0.14 * var(--pop, 0)));
+  transform: scale(calc(1 + 0.03 * var(--glow, 0) + 0.09 * var(--pop, 0)));
 }
 
 .home--touch .shelf-item {
@@ -2785,6 +2775,7 @@ body {
 }
 .cat-title .site-title span {
   cursor: pointer;
+  white-space: pre; /* each letter is its own box: keeps the space in ".side quests" */
 }
 .cat-stage .cat-title {
   position: absolute;
@@ -2811,15 +2802,25 @@ body {
   justify-content: center;
 }
 
-/* Desktop: spines standing on the shelf */
+/* Desktop: spines standing on the shelf. .cat-pop is the book's fixed spot:
+   the hover and the click belong to it, and it never moves. */
 .cat-pop {
   position: absolute;
-  transform-box: border-box;
-  transform-origin: 50% 100%; /* grows upwards, standing on the shelf */
+  z-index: 0;
+  transition: z-index 0.3s linear; /* a book going back stays in front until it's home */
+}
+.cat-pop:hover,
+.cat-pop:has(:focus-visible) {
+  z-index: 4;
+  transition: none;
+}
+.cat-guard {
+  position: absolute;
 }
 
 .cat-book,
-.cat-object {
+.cat-object,
+.cat-piece {
   display: block;
   width: 100%;
   height: 100%;
@@ -2830,22 +2831,16 @@ body {
 }
 .cat-book {
   position: relative;
-  overflow: hidden;
 }
-/* A band of book colour round the white title, so each spine keeps its shape
-   on this light page */
-.cat-book .book3d__spine-title {
-  left: 9%;
-  top: 7px;
-  width: 82%;
-  height: calc(100% - 14px);
-}
-.cat-pop > .shelf-item {
-  animation: cat-book-in 0.45s cubic-bezier(0.2, 1.3, 0.4, 1) backwards;
+.cat-pop > button,
+.cat-piece,
+.cat-slab {
+  animation: cat-book-in 0.45s cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
   animation-delay: var(--enter);
 }
 .cat-book:focus-visible,
-.cat-object:focus-visible {
+.cat-object:focus-visible,
+.cat-piece:focus-visible {
   outline: 2px solid #f67522;
   outline-offset: 2px;
 }
@@ -2855,12 +2850,140 @@ body {
   height: 100%;
   object-fit: contain;
   object-position: bottom;
+  transform-origin: 50% 100%;
+  transition: transform 0.25s ease;
+}
+.cat-object:is(:hover, :focus-visible) img {
+  transform: scale(1.04);
 }
 @keyframes cat-book-in {
   from {
     opacity: 0;
     transform: translateY(26px);
   }
+}
+
+/* The book as a real box: its spine faces you and its cover runs back into the
+   shelf from the spine's right edge. On hover the box turns, as if you'd started
+   pulling it out: 4/5 of the cover shows. Seen from the shelf's level, so it
+   keeps standing on the shelf. Only the drawing moves (no pointer events), so
+   the spot underneath stays what you hover. */
+.cat-book:not(.cat-book--cover) {
+  perspective: 2400px;
+  perspective-origin: 50% 100%;
+}
+.cat-box {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform-origin: 0 50%;
+  pointer-events: none;
+  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.cat-pop:is(:hover, :has(:focus-visible)) .cat-box {
+  transform: translateX(var(--peek-x, 0)) rotateY(-53deg); /* keep in sync with PEEK in BookStage.jsx */
+}
+.cat-box__spine,
+.cat-box__cover {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  overflow: hidden;
+}
+.cat-box__spine {
+  left: 0;
+  width: 100%;
+}
+/* The spine turns away from the light as the cover comes round */
+.cat-box__spine::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.cat-pop:is(:hover, :has(:focus-visible)) .cat-box__spine::after {
+  opacity: 0.16;
+}
+/* A band of book colour round the white title, so each spine keeps its shape
+   on this light page */
+.cat-box__spine .book3d__spine-title {
+  z-index: 1; /* above the shade: titles stay white */
+  left: 9%;
+  top: 7px;
+  width: 82%;
+  height: calc(100% - 14px);
+}
+.cat-box__cover {
+  left: 100%;
+  transform-origin: 0 50%;
+  transform: rotateY(90deg);
+}
+.cat-box__cover > * {
+  position: absolute;
+  inset: 0;
+}
+
+/* The "behind the shelf" page: the framed picture and the glyphs, placed like
+   the prototype. As with the books, the clickable area stays still and only
+   the drawing grows. */
+.cat-piece {
+  position: absolute;
+}
+.cat-piece__art {
+  position: absolute;
+  inset: 0;
+  display: block;
+  transition: transform 0.25s ease;
+}
+.cat-piece__art > img {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  max-width: none;
+}
+.cat-piece:is(:hover, :focus-visible) .cat-piece__art {
+  transform: scale(1.06);
+}
+.cat-piece--portrait .cat-piece__art {
+  transform-origin: 50% 100%;
+}
+.cat-piece--portrait:is(:hover, :focus-visible) .cat-piece__art {
+  transform: scale(1.02);
+}
+.cat-piece--portrait .cat-piece__art > .cat-portrait__stand {
+  left: -70.49px;
+  top: 194.03px;
+  width: 71.88px;
+  height: 179.7px;
+}
+.cat-portrait__frame {
+  position: absolute;
+  inset: 0;
+  background: #d9d9d9;
+}
+.cat-portrait__frame img {
+  position: absolute;
+  left: 23.93px;
+  top: 34.14px;
+  width: 214.62px;
+  height: 306.16px;
+  object-fit: cover;
+}
+.cat-slab {
+  position: absolute;
+  background: #d9d9d9;
+}
+.cat-scene {
+  position: relative;
+  margin: 0 auto;
+}
+.cat-scene > div {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
 }
 
 .cat-shelf {
@@ -2887,6 +3010,10 @@ body {
   display: inline-block;
   font-size: calc(58px * var(--s));
   line-height: 1.09;
+  white-space: nowrap;
+}
+.cat-page--phone .cat-title--long .site-title {
+  font-size: calc(46px * var(--s));
 }
 
 .shelf-menu--category-phone {
@@ -2903,6 +3030,9 @@ body {
 }
 .shelf-menu--category-phone .shelf-menu__break {
   display: block;
+}
+.shelf-menu--category-phone .shelf-menu__item:has(+ .shelf-menu__break) .shelf-menu__rule {
+  display: none; /* no divider at the end of the first line */
 }
 /* Bigger finger targets, same look */
 .shelf-menu--category-phone button {
@@ -2925,6 +3055,9 @@ body {
   justify-content: center;
   gap: calc(40px * var(--s));
 }
+.cat-row__books--tight {
+  gap: calc(24px * var(--s));
+}
 .cat-row__shelf {
   display: block;
   width: calc(430px * var(--s));
@@ -2936,6 +3069,9 @@ body {
 .cat-pop--cover {
   flex: none;
   transform: none;
+}
+.cat-book--cover {
+  overflow: hidden;
 }
 .cat-book--cover > * {
   position: absolute;

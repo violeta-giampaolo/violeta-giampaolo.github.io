@@ -51,7 +51,7 @@ function setClass(els, name, on) {
   els.forEach((el) => el.classList.toggle(name, on));
 }
 
-export function Home({ onOpen, filter, onPick, paused = false }) {
+export function Home({ onOpen, onPick, paused = false }) {
   const rootRef = useRef(null);
   const isDesktop = useMediaQuery('(min-width: 900px) and (min-aspect-ratio: 1/1)');
   const canHover = useMediaQuery('(hover: hover) and (pointer: fine)');
@@ -119,24 +119,8 @@ export function Home({ onOpen, filter, onPick, paused = false }) {
     };
   }, [canHover, isDesktop]);
 
-  // Category filter: everything outside the chosen category turns light grey
-  // and goes quiet. Clicking anywhere but a coloured item clears it.
-  useEffect(() => {
-    const root = rootRef.current;
-    for (const wrap of root.querySelectorAll('.shelf-pop')) {
-      const category = targets.get(wrap.getAttribute('data-pop'))?.category;
-      wrap.classList.toggle('is-dimmed', !!filter && category !== filter);
-    }
-    for (const box of root.querySelectorAll('.hit-area')) {
-      const category = targets.get(box.getAttribute('data-key'))?.category;
-      box.classList.toggle('is-dimmed', !!filter && category !== filter);
-    }
-  }, [filter, isDesktop]);
-  const isDimmed = (e) => !!e.target.closest?.('.is-dimmed');
-
   // Every item lights up on hover; only items with a project or link open something.
-  const keyFrom = (e, selector) =>
-    isDimmed(e) ? null : (e.target.closest?.(selector)?.getAttribute('data-key') ?? null);
+  const keyFrom = (e, selector) => e.target.closest?.(selector)?.getAttribute('data-key') ?? null;
 
   const handlers = {
     onMouseOver: canHover ? (e) => glow.current.setHover(keyFrom(e, '.shelf-item')) : undefined,
@@ -151,7 +135,6 @@ export function Home({ onOpen, filter, onPick, paused = false }) {
       if (e.target.closest?.('.shelf-menu')) return;
       const key = keyFrom(e, '.is-interactive');
       if (key) onOpen(targets.get(key));
-      else if (filter && !keyFrom(e, '.shelf-item')) onPick(null);
     },
     onKeyDown: (e) => {
       const key = keyFrom(e, '.is-interactive');
@@ -175,7 +158,7 @@ export function Home({ onOpen, filter, onPick, paused = false }) {
             <img className="stage-bg" src={bgDrawingUrl} alt="" />
             <SilhouetteQuote drawing={bgDrawing} />
             <SiteTitle className="site-title--desktop" />
-            <ShelfMenu className="shelf-menu--desktop" width={SHELF_W} active={filter} onPick={onPick} />
+            <ShelfMenu className="shelf-menu--desktop" width={SHELF_W} onPick={onPick} />
             <div className="bookshelf bookshelf--grid">
               {shelves.map((shelf) => (
                 <Shelf key={shelf.no} shelf={shelf} />
@@ -193,7 +176,7 @@ export function Home({ onOpen, filter, onPick, paused = false }) {
       <div className="phone-title" style={{ width: SHELF_W * scale, height: PHONE_TOP * scale, '--s': scale }}>
         <SiteTitle className="site-title--phone" />
       </div>
-      <ShelfMenu className="shelf-menu--phone" width={SHELF_W * scale} active={filter} onPick={onPick} />
+      <ShelfMenu className="shelf-menu--phone" width={SHELF_W * scale} onPick={onPick} />
       <div
         className="phone-stack"
         style={{

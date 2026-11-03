@@ -4,8 +4,8 @@ import { COVER_RATIO, CoverArt, SpineTitle } from '../book/Book3D.jsx';
 import { projects } from '../content/projects.js';
 import { shelfLinks } from '../content/shelfLinks.js';
 import { useMediaQuery, useViewport } from '../hooks/useMediaQuery.js';
-import { useShelfGlow } from '../hooks/useShelfGlow.js';
 import { sfx } from '../sound/sfx.js';
+import { BehindRows, BehindStage } from './BehindShelf.jsx';
 import { ShelfMenu } from './ShelfMenu.jsx';
 import { SiteTitle } from './SiteTitle.jsx';
 import { targets } from './shelves.js';
@@ -35,6 +35,19 @@ const COVERS = [
 ];
 const COVER_MAX_W = 112;
 
+// The projector, to scale: a book is about 24cm tall and the projector about 30cm long.
+const PROJECTOR = [470, 269.5];
+const PROJECTOR_PHONE = { width: 170, height: 97.5 };
+
+// How far a hovered book turns out (53°, set in styles.css): 4/5 of its cover
+// faces you and 3/5 of its spine is still showing.
+const PEEK_SIN = 0.8;
+const PEEK_COS = 0.6;
+const PAGE_MARGIN = 24;
+
+// Clicking anything but these, in the white space, goes back to the bookshelf.
+const NOT_OUTSIDE = 'a, button, .site-controls, .cat-solid, .cat-row';
+
 // A category's books, plus the projector for side quests (it isn't a book,
 // but it lives on the shelf with them).
 function itemsOf(category) {
@@ -45,13 +58,17 @@ function itemsOf(category) {
   return [...books, ...objects];
 }
 
+// A cover's real shape, for the projects that have one of their own.
+const realAspect = (project) =>
+  project.type === 'book' ? project.aspect : project.type === 'dvd' ? 135 / 190 : project.type === 'magazine' ? project.pageAspect : null;
+const coverAspect = (project) => realAspect(project) ?? COVER_RATIO;
+
 // Covers keep their real shape if they have one; binders use the shape she drew.
 function coverSize(project, i) {
   const [w, h] = COVERS[i % COVERS.length];
-  const aspect =
-    project.type === 'book' ? project.aspect : project.type === 'dvd' ? 135 / 190 : project.type === 'magazine' ? project.pageAspect : null;
+  const aspect = realAspect(project);
   if (!aspect) return { width: w, height: h };
-  const width = Math.min(h * (aspect ?? COVER_RATIO), COVER_MAX_W);
+  const width = Math.min(h * aspect, COVER_MAX_W);
   return { width, height: width / aspect };
 }
 
@@ -61,63 +78,66 @@ function open(item, onOpen) {
   onOpen(item.object ? targets.get(item.key) : targets.get(item.project.shelfBook));
 }
 
-// Desktop: every book has its own fixed spot, because the hover effect moves
-// the hovered book to the end of the list to draw it in front of the others.
-function SpineRow({ items, onOpen, canHover, scale }) {
-  const root = useRef(null);
-  const glow = useShelfGlow(root, canHover, scale, sfx.hover);
-
-  const sizes = items.map((item, i) => (item.object ? [270, 155] : SPINES[i % SPINES.length]));
+// Desktop: the spot on the shelf is what you hover and click. It never moves;
+// only the book drawn inside it turns out, so the cursor can run along the
+// spines and each one peeks in turn, even past a cover that's sticking out.
+function SpineRow({ items, onOpen, canHover }) {
+  const sizes = items.map((item, i) => (item.object ? PROJECTOR : SPINES[i % SPINES.length]));
   const natural = sizes.reduce((sum, [w]) => sum + w, 0) + GAP * (items.length - 1);
   const k = Math.min(1, ROW_W / natural); // lots of books: thinner spines
-  let x = (STAGE_W - natural * k) / 2;
-
-  const keyFrom = (e) => e.target.closest?.('.shelf-pop')?.getAttribute('data-pop') ?? null;
+  const start = (STAGE_W - natural * k) / 2;
+  const tallest = Math.max(...sizes.map(([, h]) => h));
+  let x = start;
 
   return (
-    <div
-      className="cat-spines"
-      ref={root}
-      onMouseOver={canHover ? (e) => glow.current.setHover(keyFrom(e)) : undefined}
-      onMouseMove={canHover ? (e) => glow.current.setPointer({ x: e.clientX, y: e.clientY }) : undefined}
-      onMouseLeave={
-        canHover
-          ? () => {
-              glow.current.setHover(null);
-              glow.current.setPointer(null);
-            }
-          : undefined
-      }
-    >
+    <div className="cat-spines">
+      {/* The narrow gaps between books don't count as clicking outside the shelf */}
+      <span className="cat-solid cat-guard" style={{ left: start, width: natural * k, top: SHELF_TOP - tallest, height: tallest }} />
       {items.map((item, i) => {
         const [w, h] = sizes[i];
         const width = item.object ? w : w * k;
         const left = x;
-        x += (item.object ? w : w * k) + GAP * k;
+        x += width + GAP * k;
         const style = { left, width, height: h, top: SHELF_TOP - h, '--enter': `${i * 28}ms` };
-        return (
-          <div key={item.key} className="shelf-pop cat-pop" data-pop={item.key} style={style}>
-            {item.object ? (
-              <button type="button" className="shelf-item cat-object" aria-label={item.label} onClick={() => open(item, onOpen)}>
-                <img src={projectorUrl} alt="" draggable="false" />
-              </button>
-            ) : (
+        if (item.object) {
+          return (
+            <div key={item.key} className="cat-pop" data-pop={item.key} style={style}>
               <button
                 type="button"
-                className="shelf-item cat-book"
-                data-book={item.key}
-                data-view="spine"
-                aria-label={item.project.title}
-                style={{ background: item.project.color }}
+                className="cat-object"
+                aria-label={item.label}
+                onMouseEnter={canHover ? sfx.hover : undefined}
                 onClick={() => open(item, onOpen)}
               >
-                <SpineTitle
-                  text={spineTitleOf(item.project)}
-                  color={item.project.spine?.color ?? '#fff'}
-                  stack={!!item.project.spine?.stack}
-                />
+                <img src={projectorUrl} alt="" draggable="false" />
               </button>
-            )}
+            </div>
+          );
+        }
+        const { project } = item;
+        const coverW = h * coverAspect(project);
+        // Books near the right edge slide back a little so the cover stays on the page.
+        const peekX = Math.min(0, STAGE_W - PAGE_MARGIN - (left + width * PEEK_COS + coverW * PEEK_SIN));
+        return (
+          <div key={item.key} className="cat-pop" data-pop={item.key} style={{ ...style, '--peek-x': `${peekX}px` }}>
+            <button
+              type="button"
+              className="cat-book"
+              data-book={item.key}
+              data-view="spine"
+              aria-label={project.title}
+              onMouseEnter={canHover ? sfx.hover : undefined}
+              onClick={() => open(item, onOpen)}
+            >
+              <span className="cat-box">
+                <span className="cat-box__spine" style={{ background: project.color }}>
+                  <SpineTitle text={spineTitleOf(project)} color={project.spine?.color ?? '#fff'} stack={!!project.spine?.stack} />
+                </span>
+                <span className="cat-box__cover" style={{ background: project.color, width: coverW }}>
+                  <CoverArt project={project} />
+                </span>
+              </span>
+            </button>
           </div>
         );
       })}
@@ -135,10 +155,10 @@ function CoverRows({ items, onOpen, scale }) {
     <div className="cat-rows" style={{ '--s': scale }}>
       {rows.map((row, r) => (
         <div key={r} className="cat-row">
-          <div className="cat-row__books">
+          <div className={`cat-row__books${row.some((item) => item.object) ? ' cat-row__books--tight' : ''}`}>
             {row.map((item, c) => {
               const i = r * PER_ROW + c;
-              const size = item.object ? { width: 150, height: 86 } : coverSize(item.project, i);
+              const size = item.object ? PROJECTOR_PHONE : coverSize(item.project, i);
               return (
                 <motion.div
                   key={item.key}
@@ -147,9 +167,9 @@ function CoverRows({ items, onOpen, scale }) {
                   style={{ width: size.width * scale, height: size.height * scale }}
                   initial={{ y: 28, opacity: 0 }}
                   whileInView={{ y: 0, opacity: 1 }}
-                  whileTap={{ scale: 1.08 }}
+                  whileTap={{ scale: 1.04 }}
                   viewport={{ once: true, amount: 0.3 }}
-                  transition={{ type: 'spring', stiffness: 260, damping: 18, delay: c * 0.06 }}
+                  transition={{ type: 'spring', stiffness: 260, damping: 30, delay: c * 0.06 }}
                 >
                   {item.object ? (
                     <button type="button" className="cat-object" aria-label={item.label} onClick={() => open(item, onOpen)}>
@@ -205,7 +225,7 @@ export function CategoryShelf({ category, onPick, onHome, onOpen, controls }) {
 
   const title = (
     <a
-      className="cat-title"
+      className={`cat-title${category.length > 12 ? ' cat-title--long' : ''}`}
       href="#"
       aria-label="Back to the bookshelf"
       onClick={(e) => {
@@ -213,14 +233,34 @@ export function CategoryShelf({ category, onPick, onHome, onOpen, controls }) {
         onHome();
       }}
     >
-      <SiteTitle text=".projects" />
+      <SiteTitle key={category} text={`.${category}`} />
     </a>
   );
+
+  const behind = category === 'behind the shelf';
+
+  // A click that only closes the top-left menu shouldn't also leave the page.
+  const closingMenu = useRef(false);
+  const outside = {
+    onPointerDown: () => {
+      closingMenu.current = !!document.querySelector('.site-menu');
+    },
+    onClick: (e) => {
+      if (!closingMenu.current && !e.target.closest(NOT_OUTSIDE)) onHome();
+    },
+  };
 
   if (isDesktop) {
     const scale = Math.min(w / STAGE_W, h / STAGE_H);
     return (
-      <motion.div className="cat-page" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+      <motion.div
+        className="cat-page"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+        {...outside}
+      >
         {controls}
         <div
           className="cat-stage"
@@ -228,8 +268,12 @@ export function CategoryShelf({ category, onPick, onHome, onOpen, controls }) {
         >
           {title}
           <ShelfMenu className="shelf-menu--category" active={category} onPick={onPick} />
-          {fontReady && <SpineRow key={category} items={items} onOpen={onOpen} canHover={canHover} scale={scale} />}
-          <span className="cat-shelf" />
+          {behind ? (
+            <BehindStage onOpen={onOpen} canHover={canHover} />
+          ) : (
+            fontReady && <SpineRow key={category} items={items} onOpen={onOpen} canHover={canHover} />
+          )}
+          <span className="cat-solid cat-shelf" />
         </div>
       </motion.div>
     );
@@ -245,11 +289,16 @@ export function CategoryShelf({ category, onPick, onHome, onOpen, controls }) {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
       style={{ '--s': scale }}
+      {...outside}
     >
       {controls}
       {title}
       <ShelfMenu className="shelf-menu--category shelf-menu--category-phone" active={category} onPick={onPick} />
-      <CoverRows key={category} items={items} onOpen={onOpen} scale={scale} />
+      {behind ? (
+        <BehindRows onOpen={onOpen} canHover={canHover} scale={scale} />
+      ) : (
+        <CoverRows key={category} items={items} onOpen={onOpen} scale={scale} />
+      )}
     </motion.div>
   );
 }

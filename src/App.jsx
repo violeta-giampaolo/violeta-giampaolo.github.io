@@ -16,19 +16,16 @@ import { ShelfFilters } from './home/ShelfFilters.jsx';
 import { PaperTexture } from './home/PaperTexture.jsx';
 import { categories } from './content/shelfLinks.js';
 
-// "behind the shelf" stays a filter on the home page; every other category
-// has its own shelf page, with its own address (…/#side-quests), so the
-// browser's back button works and a category can be linked to directly.
-const STAYS_HOME = 'behind the shelf';
+// Every category has its own shelf page, with its own address (…/#side-quests),
+// so the browser's back button works and a category can be linked to directly.
 const slugOf = (category) => category.replace(/\s+/g, '-');
 const pageFromHash = () =>
-  categories.find((c) => c !== STAYS_HOME && slugOf(c) === decodeURIComponent(window.location.hash.slice(1))) ?? null;
+  categories.find((c) => slugOf(c) === decodeURIComponent(window.location.hash.slice(1))) ?? null;
 
 export default function App() {
   const [open, setOpen] = useState(null);
   const [book, setBook] = useState(null); // shelf key of the book that flew out
   const closeBook = useCallback(() => setBook(null), []);
-  const [filter, setFilter] = useState(null); // the home page's filter ("behind the shelf")
   const [page, setPage] = useState(pageFromHash); // the category page that's open
   const [privacyOver, setPrivacyOver] = useState(false); // privacy note on top of the quote form
 
@@ -38,20 +35,11 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
+  // The filter on either page: a category opens its shelf. Clicking the one
+  // you're on arrives here as null, which goes back to the bookshelf.
   const goTo = useCallback((category) => {
     window.location.hash = category ? slugOf(category) : '';
   }, []);
-
-  // The filter on either page: a category opens its shelf. Clicking the one
-  // you're on arrives here as null, which goes back to the bookshelf.
-  const pick = useCallback(
-    (category) => {
-      const staysHome = !category || category === STAYS_HOME;
-      setFilter(staysHome ? category : null);
-      goTo(staysHome ? null : category);
-    },
-    [goTo],
-  );
 
   const goHome = useCallback(() => goTo(null), [goTo]);
 
@@ -85,13 +73,13 @@ export default function App() {
       <ShelfFilters />
       <PaperTexture />
 
-      <Home paused={!!book || !!open || !!page} filter={filter} onPick={pick} onOpen={openTarget} />
+      <Home paused={!!book || !!open || !!page} onPick={goTo} onOpen={openTarget} />
       <AnimatePresence>
         {page && (
-          <CategoryShelf key="category" category={page} onPick={pick} onHome={goHome} onOpen={openTarget} controls={controls} />
+          <CategoryShelf key="category" category={page} onPick={goTo} onHome={goHome} onOpen={openTarget} controls={controls} />
         )}
       </AnimatePresence>
-      {book && <BookStage startKey={book} category={page ?? filter} onClosed={closeBook} />}
+      {book && <BookStage startKey={book} category={page} onClosed={closeBook} />}
       {open?.link === 'quote' && (
         <QuoteForm onClose={() => setOpen(null)} onPrivacy={() => setPrivacyOver(true)} paused={privacyOver} />
       )}

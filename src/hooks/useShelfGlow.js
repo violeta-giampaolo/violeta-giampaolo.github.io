@@ -4,8 +4,8 @@ const RADIUS = 150; // stage px around the cursor where books start to wake up
 const HALO = 0.5; // how bright neighbours get (0–1) — the book under the cursor gets 1
 const EASE_IN = 0.22; // per-frame catch-up when brightening (higher = faster)
 const EASE_OUT = 0.04; // per-frame fade when the cursor moves away (lower = longer trail)
-const POP_STIFFNESS = 0.16; // how hard the hovered book springs out
-const POP_DAMPING = 0.72; // lower = more wobble before it settles
+const POP_STIFFNESS = 0.12; // how hard the hovered book springs out
+const POP_DAMPING = 0.6; // higher = more wobble before it settles
 
 // Desktop hover: every shelf item has a "glow" between 0 (idle) and 1 (full).
 // Items near the cursor glow a little, the hovered one fully, and all of them
@@ -72,7 +72,7 @@ export function useShelfGlow(rootRef, enabled, scale, onEnter) {
         item.glow += (target - item.glow) * (target > item.glow ? EASE_IN : EASE_OUT);
         if (Math.abs(target - item.glow) < 0.002) item.glow = target;
 
-        // Spring: overshoots a little, then settles.
+        // Spring: eases out and settles with barely any wobble.
         const popTarget = isHovered ? 1 : 0;
         item.vel = (item.vel + (popTarget - item.pop) * POP_STIFFNESS) * POP_DAMPING;
         item.pop += item.vel;

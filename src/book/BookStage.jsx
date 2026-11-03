@@ -52,6 +52,9 @@ function depthRatioOf(key) {
   return f ? Math.min(0.22, Math.max(0.05, f.thickness / f.length)) : 0.1;
 }
 
+// How far a hovered book turns out on a category page. Keep in sync with .cat-box in styles.css.
+const PEEK = 53;
+
 // The book standing on a category page, if that's where it's opening from.
 const categoryBook = (key) => document.querySelector(`.cat-book[data-book="${CSS.escape(key)}"]`);
 
@@ -69,7 +72,7 @@ function shelfPose(key, H) {
   const book = categoryBook(key);
   if (book) {
     const r = book.getBoundingClientRect();
-    return {
+    const pose = {
       px: r.left + r.width / 2,
       py: r.top + r.height / 2,
       rz: 0,
@@ -77,6 +80,13 @@ function shelfPose(key, H) {
       ry: book.dataset.view === 'cover' ? 0 : 90,
       rx: 0,
     };
+    // Already peeking out of the shelf: take off from there, not from the spine.
+    if (book.dataset.view === 'spine' && book.matches(':hover, :focus-visible')) {
+      const faces = [...book.querySelectorAll('.cat-box > *')].map((face) => face.getBoundingClientRect());
+      pose.px = (Math.min(...faces.map((f) => f.left)) + Math.max(...faces.map((f) => f.right))) / 2;
+      pose.ry = 90 - PEEK;
+    }
+    return pose;
   }
   const el = shelfItem(key);
   const f = el && bookFrame(el, (shape) => shape.getScreenCTM());
