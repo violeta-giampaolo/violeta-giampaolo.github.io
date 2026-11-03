@@ -77,7 +77,7 @@ export default function App() {
       <ShelfFilters />
       <PaperTexture />
 
-      <Home paused={!!book || !!open || !!page} onPick={goTo} onOpen={openTarget} />
+      <Home paused={!!book || !!open || !!shelf} onPick={goTo} onOpen={openTarget} />
       {shelf && (
         <CategoryShelf
           category={shelf}

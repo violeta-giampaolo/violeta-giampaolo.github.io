@@ -234,7 +234,7 @@ body {
 .shelf-pop {
   transform-box: fill-box;
   transform-origin: center;
-  transform: scale(calc(1 + 0.03 * var(--glow, 0) + 0.09 * var(--pop, 0)));
+  transform: scale(calc(1 + 0.03 * var(--glow, 0) + 0.14 * var(--pop, 0)));
 }
 
 .home--touch .shelf-item {
@@ -2775,7 +2775,7 @@ body {
   pointer-events: none; /* already on its way out: clicks belong to the bookshelf */
 }
 .cat-page--leaving::before {
-  animation: cat-veil-out 0.32s ease 0.1s forwards;
+  animation: cat-veil-out 0.46s forwards;
 }
 .cat-page--leaving > * {
   animation: cat-content-out 0.14s ease-out forwards;
@@ -2787,11 +2787,30 @@ body {
     -webkit-backdrop-filter: blur(0);
   }
 }
+/* Redrawing a blur on every frame makes browsers flicker over the big shelf
+   drawing, so the blur never animates. The white thickens, the blur is dropped
+   in one step while it's hidden under the white, and then only the white fades. */
 @keyframes cat-veil-out {
-  to {
+  0% {
+    background: rgba(255, 255, 255, 0.82);
+    animation-timing-function: ease-out;
+  }
+  30% {
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    animation-timing-function: step-end;
+  }
+  31% {
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    animation-timing-function: ease-in-out;
+  }
+  100% {
     background: rgba(255, 255, 255, 0);
-    backdrop-filter: blur(0);
-    -webkit-backdrop-filter: blur(0);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 }
 @keyframes cat-content-in {
