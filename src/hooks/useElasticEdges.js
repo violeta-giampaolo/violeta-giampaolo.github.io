@@ -16,6 +16,7 @@ export function useElasticEdges(enabled) {
     let anim;
 
     const release = () => {
+      pull = 0;
       anim = animate(y, 0, SETTLE);
     };
 
@@ -27,9 +28,7 @@ export function useElasticEdges(enabled) {
       if (!((delta < 0 && atTop) || (delta > 0 && atBottom))) return;
 
       anim?.stop();
-      // Carry on from wherever the page is, so scrolling mid-bounce doesn't make it jump.
-      const stretch = Math.max(-0.99, Math.min(0.99, y.get() / MAX_PULL));
-      pull = MAX_PULL * 4 * Math.atanh(stretch) - delta;
+      pull -= delta;
       // The further you pull, the harder it resists.
       y.set(MAX_PULL * Math.tanh(pull / (MAX_PULL * 4)));
       clearTimeout(timer);

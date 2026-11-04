@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Home } from './home/Home.jsx';
-import { CategoryShelf } from './home/CategoryShelf.jsx';
 import { Placeholder } from './components/Placeholder.jsx';
 import { SiteControls } from './components/SiteControls.jsx';
 import { QuoteForm } from './components/QuoteForm.jsx';
@@ -13,83 +12,30 @@ import { BookStage } from './book/BookStage.jsx';
 import { sfx } from './sound/sfx.js';
 import { ShelfFilters } from './home/ShelfFilters.jsx';
 import { PaperTexture } from './home/PaperTexture.jsx';
-import { categories } from './content/shelfLinks.js';
-
-// Every category has its own shelf page, with its own address (…/#side-quests),
-// so the browser's back button works and a category can be linked to directly.
-const slugOf = (category) => category.replace(/\s+/g, '-');
-const pageFromHash = () =>
-  categories.find((c) => slugOf(c) === decodeURIComponent(window.location.hash.slice(1))) ?? null;
 
 export default function App() {
   const [open, setOpen] = useState(null);
   const [book, setBook] = useState(null); // shelf key of the book that flew out
   const closeBook = useCallback(() => setBook(null), []);
-  const [page, setPage] = useState(pageFromHash); // the category page that's open
+  const [category, setCategory] = useState(null); // the shelf menu filter
   const [privacyOver, setPrivacyOver] = useState(false); // privacy note on top of the quote form
-
-  // Leaving a category page: it stays on screen until it has finished fading out.
-  const [lastPage, setLastPage] = useState(page);
-  if (page && page !== lastPage) setLastPage(page);
-  const shelf = page ?? lastPage;
-
-  useEffect(() => {
-    const onHash = () => setPage(pageFromHash());
-    window.addEventListener('hashchange', onHash);
-    return () => window.removeEventListener('hashchange', onHash);
-  }, []);
-
-  // The filter on either page: a category opens its shelf. Clicking the one
-  // you're on arrives here as null, which goes back to the bookshelf.
-  const goTo = useCallback((category) => {
-    window.location.hash = category ? slugOf(category) : '';
-  }, []);
-
-  const goHome = useCallback(() => goTo(null), [goTo]);
-
-  // Esc leaves a category page (unless something is open on top of it).
-  useEffect(() => {
-    if (!page || book || open) return;
-    const onKey = (e) => e.key === 'Escape' && goHome();
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [page, book, open, goHome]);
-
-  const openTarget = (target) => {
-    sfx.click();
-    if (target.kind === 'project') {
-      if (!book) setBook(target.project.shelfBook);
-    } else setOpen(target);
-  };
-
-  const controls = (
-    <SiteControls
-      onHome={page ? goHome : undefined}
-      onOpen={(link) => {
-        sfx.click();
-        setOpen({ kind: 'link', link });
-      }}
-    />
-  );
 
   return (
     <>
       <ShelfFilters />
       <PaperTexture />
 
-      <Home paused={!!book || !!open || !!shelf} onPick={goTo} onOpen={openTarget} />
-      {shelf && (
-        <CategoryShelf
-          category={shelf}
-          leaving={!page}
-          onLeft={() => setLastPage(null)}
-          onPick={goTo}
-          onHome={goHome}
-          onOpen={openTarget}
-          controls={controls}
-        />
-      )}
-      {book && <BookStage startKey={book} category={page} onClosed={closeBook} />}
+      <Home
+        paused={!!book || !!open}
+        onFilter={setCategory}
+        onOpen={(target) => {
+          sfx.click();
+          if (target.kind === 'project') {
+            if (!book) setBook(target.project.shelfBook);
+          } else setOpen(target);
+        }}
+      />
+      {book && <BookStage startKey={book} category={category} onClosed={closeBook} />}
       {open?.link === 'quote' && (
         <QuoteForm onClose={() => setOpen(null)} onPrivacy={() => setPrivacyOver(true)} paused={privacyOver} />
       )}
@@ -104,7 +50,12 @@ export default function App() {
         <Placeholder target={open} onClose={() => setOpen(null)} />
       )}
       {privacyOver && <PrivacyNote onClose={() => setPrivacyOver(false)} />}
-      {!page && controls}
+      <SiteControls
+        onOpen={(link) => {
+          sfx.click();
+          setOpen({ kind: 'link', link });
+        }}
+      />
     </>
   );
 }
